@@ -39,7 +39,7 @@ with open("UWB_output_angle.csv", "a", newline="") as csvfile:
 
             p_value = twr.get("P", None)
             d_value = twr.get("D", None)
-            x_cm = twr.gezt("Xcm", None)
+            x_cm = twr.get("Xcm", None)
             y_cm = twr.get("Ycm", None)
 
             if None in (p_value, d_value, x_cm, y_cm):
