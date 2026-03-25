@@ -27,7 +27,7 @@ def meanDistance(depth_frame,cx,cy, imageWidth, imageHeight):
 
 
 def main():
-    model = YOLO("ConvertYOLO/best.pt")
+    model = YOLO("/home/rg4444/Rob4-Gr444-Projekt/Files/OpenVinoFP16Yolomodel/best.xml", task="detect")
     cameraFOV = 69
     imageWidth = int(640)
     imageHeight = int(480)
