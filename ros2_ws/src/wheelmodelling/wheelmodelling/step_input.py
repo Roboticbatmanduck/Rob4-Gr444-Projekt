@@ -63,6 +63,11 @@ class StepInputNode(Node):
                                f'step time = {self.step_time}s, step amplitude = {self.step_amplitude}m/s'
                                f'angular z = {self.angular_z}rad/s, duration = {self.duration}s')
         
+        log_dir = os.path.expanduser("~/ros2_logs")
+        os.makedirs(log_dir, exist_ok=True)
+        self.log_file = open(os.path.join(log_dir, "speed_log.csv"), "w")
+        self.log_file.write("time,speed\n")
+        self.get_logger().info(f"Logging to: {self.log_file.name}")
     #Calculates the time from startup till now    
     def _now_sec(self):
         return (self.get_clock().now() - self.t0).nanoseconds * 1e-9
@@ -87,14 +92,27 @@ class StepInputNode(Node):
         v = msg.twist.twist.linear
         speed = np.sqrt(v.x**2 + v.y**2 + v.z**2)
         t = self._now_sec()
-        if t - self.last_log_t > 0.2: # log ca 5 Hz
+        if t - self.last_log_t > 0.01: # log ca 100 Hz
             self.get_logger().info(f't={t:5.2f}s, speed = {speed:5.3f}m/s')
+            self.log_file.write(f"{t},{speed}\n")
             self.last_log_t = t
+    
+    def destroy_node(self):
+        self.log_file.close()
+        return super().destroy_node()
 
 def main():
     rclpy.init()
     node = StepInputNode()
-    rclpy.spin(node)
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Shutting down node...")
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+    
 
 if __name__ == "__main__":
     main()
