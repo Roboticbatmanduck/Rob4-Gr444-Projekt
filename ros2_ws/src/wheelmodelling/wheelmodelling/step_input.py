@@ -23,7 +23,7 @@ class StepInputNode(Node):
         self.declare_parameter('cmd_topic', '/cmd_vel')
         self.declare_parameter('publish_rate', cfg.get("publish_rate", 20.0)) #Hz
         self.declare_parameter('step_time', cfg.get("step_time", 1.0)) #s
-        self.declare_parameter('step_amplitude', cfg.get("step_amplitude", 1.0)) #m/s
+        self.declare_parameter('step_amplitude', cfg.get("step_amplitude", 0.1)) #m/s
         self.declare_parameter('angular_z', cfg.get('angular_z', 0.0)) # rad/s
         self.declare_parameter('duration', cfg.get('duration', 5.0)) #s
         self.declare_parameter('odom_topic', '/odom')
@@ -59,15 +59,15 @@ class StepInputNode(Node):
         #start time
         self.t0 = self.get_clock().now()
         #starts the logger with startup information
-        self.get_logger().info(f'Publishing step on {self.cmd_topic} at {self.publish_rate} Hz'
-                               f'step time = {self.step_time}s, step amplitude = {self.step_amplitude}m/s'
+        self.get_logger().info(f'Publishing step on {self.cmd_topic} at {self.publish_rate}Hz '
+                               f'step time = {self.step_time}s, step amplitude = {self.step_amplitude}m/s '
                                f'angular z = {self.angular_z}rad/s, duration = {self.duration}s')
         
-        log_dir = os.path.expanduser("~/ros2_logs")
+        log_dir = os.path.expanduser('~/ros2_logs')
         os.makedirs(log_dir, exist_ok=True)
-        self.log_file = open(os.path.join(log_dir, "speed_log.csv"), "w")
+        self.log_file = open(os.path.join(log_dir, 'speed_log.csv'), 'w')
         self.log_file.write("time,speed\n")
-        self.get_logger().info(f"Logging to: {self.log_file.name}")
+        self.get_logger().info(f'Logging to: {self.log_file.name}')
     #Calculates the time from startup till now    
     def _now_sec(self):
         return (self.get_clock().now() - self.t0).nanoseconds * 1e-9
