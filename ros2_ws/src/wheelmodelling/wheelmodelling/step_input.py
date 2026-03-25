@@ -13,10 +13,16 @@ class StepInputNode(Node):
     def __init__(self):
         super().__init__("step_input")
         #Load parameters from json file 
-        pkg_share = get_package_share_directory('wheelmodelling')
-        json_path = os.path.join(pkg_share,"config", "step_input_params.json")
-        with open(json_path, "r") as f:
-            cfg = json.load(f)
+        cfg ={}
+        try:
+            pkg_share = get_package_share_directory('wheelmodelling')
+            json_path = os.path.join(pkg_share,"config", "step_input_params.json")
+            with open(json_path, "r") as f:
+                cfg = json.load(f)
+        except Exception as e:
+            self.get_logger().info(f'Could not locate parameters: {e}')
+        
+
 
         #Declare parameters
         #the values for the parameters are read from the json file
@@ -62,12 +68,17 @@ class StepInputNode(Node):
         self.get_logger().info(f'Publishing step on {self.cmd_topic} at {self.publish_rate}Hz '
                                f'step time = {self.step_time}s, step amplitude = {self.step_amplitude}m/s '
                                f'angular z = {self.angular_z}rad/s, duration = {self.duration}s')
-        
-        log_dir = os.path.expanduser('~/ros2_logs')
-        os.makedirs(log_dir, exist_ok=True)
-        self.log_file = open(os.path.join(log_dir, 'speed_log.csv'), 'w')
-        self.log_file.write("time,speed\n")
-        self.get_logger().info(f'Logging to: {self.log_file.name}')
+        try:
+            print(">>> Logging code reached")
+            log_dir = os.path.expanduser('~/ros2_logs')
+            os.makedirs(log_dir, exist_ok=True)
+            self.log_file = open(os.path.join(log_dir, 'speed_log.csv'), 'w')
+            self.log_file.write("time,speed\n")
+            self.get_logger().warn(f'Logging to: {self.log_file.name}')
+        except Exception as e:
+            print(">>> Logging code failed")
+            self.get_logger().warn(f'Error in logging: {e}')
+
     #Calculates the time from startup till now    
     def _now_sec(self):
         return (self.get_clock().now() - self.t0).nanoseconds * 1e-9
@@ -88,13 +99,14 @@ class StepInputNode(Node):
 
         self.publisher.publish(msg)
 
-    def _on_odom(self, msg, Odometry):
+    def _on_odom(self, msg):
         v = msg.twist.twist.linear
         speed = np.sqrt(v.x**2 + v.y**2 + v.z**2)
         t = self._now_sec()
-        if t - self.last_log_t > 0.01: # log ca 100 Hz
+        if t - self.last_log_t > 0.02: # log ca 50 Hz
             self.get_logger().info(f't={t:5.2f}s, speed = {speed:5.3f}m/s')
             self.log_file.write(f"{t},{speed}\n")
+            self.log_file.flush()
             self.last_log_t = t
     
     def destroy_node(self):
