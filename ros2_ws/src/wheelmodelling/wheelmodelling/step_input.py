@@ -3,6 +3,7 @@ import os, json
 from rclpy.node import Node
 from std_msgs.msg import String
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TwistStamped
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from ament_index_python.packages import get_package_share_directory
@@ -33,7 +34,7 @@ class StepInputNode(Node):
         self.declare_parameter('angular_z', cfg.get('angular_z', 0.0)) # rad/s
         self.declare_parameter('duration', cfg.get('duration', 5.0)) #s
         self.declare_parameter('odom_topic', '/odom')
-
+        self.declare_parameter('joint_state_topic', '/joint_states')
         #Get parameters
         p = self.get_parameter
         self.cmd_topic = p('cmd_topic').value
@@ -43,7 +44,7 @@ class StepInputNode(Node):
         self.angular_z = float(p('angular_z').value)
         self.duration = float(p('duration').value)
         self.odom_topic = self.get_parameter('odom_topic').value
-
+        self.joint_topic = self.get_parameter('joint_state_topic').value
         #Publisher and timer
         #send twist command to cmd_topic with 10 up to backlog
         self.publisher = self.create_publisher(TwistStamped, self.cmd_topic, 10)
@@ -58,8 +59,8 @@ class StepInputNode(Node):
                                 depth=10)
         
         #Subscriber til /odom topiccen
-        self.subscriber = self.create_subscription(Odometry, self.odom_topic, self._on_odom, qos_sensor)
-        
+        #self.subscriber = self.create_subscription(Odometry, self.odom_topic, self._on_odom, qos_sensor)
+        self.subscriber = self.create_subscription(JointState, self.joint_topic, self._on_joint_states, qos_sensor)
         #Last log time
         self.last_log_t = 0.0
         #start time
@@ -69,15 +70,16 @@ class StepInputNode(Node):
                                f'step time = {self.step_time}s, step amplitude = {self.step_amplitude}m/s '
                                f'angular z = {self.angular_z}rad/s, duration = {self.duration}s')
         try:
-            print(">>> Logging code reached")
             log_dir = os.path.expanduser('~/ros2_logs')
             os.makedirs(log_dir, exist_ok=True)
             self.log_file = open(os.path.join(log_dir, 'speed_log.csv'), 'w')
             self.log_file.write("time,speed\n")
             self.get_logger().warn(f'Logging to: {self.log_file.name}')
         except Exception as e:
-            print(">>> Logging code failed")
             self.get_logger().warn(f'Error in logging: {e}')
+
+        self.counter = 0
+        self.latest_speed = 0.0
 
     #Calculates the time from startup till now    
     def _now_sec(self):
@@ -89,7 +91,7 @@ class StepInputNode(Node):
         msg = TwistStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         phase = t % self.duration
-
+        self.log_file.write(f"{t},{self.latest_speed}\n")
         if phase >= self.step_time:
             msg.twist.linear.x = self.step_amplitude
             msg.twist.angular.z = self.angular_z
@@ -99,18 +101,42 @@ class StepInputNode(Node):
 
         self.publisher.publish(msg)
 
+    def _on_joint_states(self, msg):
+        # JointState har: msg.name, msg.position, msg.velocity, msg.effort
+        # Turtlebot3 har 2 hjul: left wheel, right wheel
+        # velocity er i rad/s
+        
+        # Tag gennemsnittet for en samlet fremad-hastighed:
+        if len(msg.velocity) >= 2:
+            left = msg.velocity[0]
+            right = msg.velocity[1]
+            self.get_logger().info(f"left={left:.5f}, right={right:.5f}")
+            speed = (left + right) / 2.0   # rad/s
+        
+            # # Konverter til linear speed:
+            # wheel_radius = 0.033  # Turtlebot3 Burger wheel radius in meters
+            # speed = wheel_vel * wheel_radius  # m/s
+
+            t = self._now_sec()
+            self.latest_speed = speed
+
     def _on_odom(self, msg):
         v = msg.twist.twist.linear
         speed = np.sqrt(v.x**2 + v.y**2 + v.z**2)
         t = self._now_sec()
-        if t - self.last_log_t > 0.02: # log ca 50 Hz
+        if self.counter % 5 == 0:
             self.get_logger().info(f't={t:5.2f}s, speed = {speed:5.3f}m/s')
+        if t - self.last_log_t > 0.02: # log ca 50 Hz
+            #self.get_logger().info(f't={t:5.2f}s, speed = {speed:5.3f}m/s')
             self.log_file.write(f"{t},{speed}\n")
             self.log_file.flush()
             self.last_log_t = t
+            self.counter += 1
     
-    def destroy_node(self):
+    def destroy_node(self,msg):
         self.log_file.close()
+        msg.twist.linear.x = 0.0
+        msg.twist.angular.z = 0.0
         return super().destroy_node()
 
 def main():
