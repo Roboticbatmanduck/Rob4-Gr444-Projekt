@@ -92,10 +92,6 @@ def main():
                 cx, cy, w, h = best.xywh[0].tolist()
                 x = cx - w/2.0
                 y = cy - h/2.0
-                bbox = (x, y, w, h)
-                tracker = cv2.legacy.TrackerMOSSE_create()
-                tracker.init(color_image, bbox)
-            else:
                 if not headless:
                     cv2.rectangle(color_image, (int(x),int(y)), (int(x+w), int(y+h)), (0,255,0), 2)
                     cv2.circle(color_image, (cx,cy), 1, (0,0,255), -1)
@@ -104,6 +100,7 @@ def main():
                 angle_deg = np.rad2deg(angle_rad)
                 print(f"Distance to person: {meanDistance(depth_frame, cx, cy, imageWidth, imageHeight)} [m]")
                 print(f"Angle to person: {angle_deg} [deg]")
+                
 
             if not headless:
                 annoted = results[0].plot()
