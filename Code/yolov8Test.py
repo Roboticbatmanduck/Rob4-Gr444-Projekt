@@ -94,7 +94,7 @@ def main():
                 y = cy - h/2.0
                 if not headless:
                     cv2.rectangle(color_image, (int(x),int(y)), (int(x+w), int(y+h)), (0,255,0), 2)
-                    cv2.circle(color_image, (cx,cy), 1, (0,0,255), -1)
+                    cv2.circle(color_image, (int(cx),int(cy)), 1, (0,0,255), -1)
                 offset = cx - imageCenter
                 angle_rad = np.atan(offset/fx) 
                 angle_deg = np.rad2deg(angle_rad)
