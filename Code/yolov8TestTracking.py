@@ -86,6 +86,7 @@ def main():
             # Convert images to numpy arrays
             depth_image = np.asanyarray(depth_frame.get_data())
             color_image = np.asanyarray(color_frame.get_data())
+            
             if counter > 600:
                 tracking = False
                 counter = 0

@@ -1,3 +1,15 @@
 [submodule "ros2_ws/src/realsense-ros"]
 	path = ros2_ws/src/realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros.git
+[submodule "ros2_ws/src/DynamixelSDK"]
+	path = ros2_ws/src/DynamixelSDK
+	url = https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+[submodule "ros2_ws/src/turtlebot3"]
+	path = ros2_ws/src/turtlebot3
+	url = https://github.com/ROBOTIS-GIT/turtlebot3.git
+[submodule "ros2_ws/src/turtlebot3_msgs"]
+	path = ros2_ws/src/turtlebot3_msgs
+	url = https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
+[submodule "ros2_ws/src/turtlebot3_simulations"]
+	path = ros2_ws/src/turtlebot3_simulations
+	url = https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
