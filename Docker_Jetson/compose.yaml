@@ -9,8 +9,7 @@ services:
     volumes:
       - /home/rg4444/rg4444-docker/Rob4-Gr444-Projekt/ros2_ws:/workspace
       - /run/udev:/run/udev:ro    
-working_dir: /workspace
-
+    working_dir: /workspace
     stdin_open: true
     tty: true
 
