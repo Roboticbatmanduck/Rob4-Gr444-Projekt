@@ -1,0 +1,26 @@
+services:
+  turtle_bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rob4-turtle-simulation
+    container_name: ros2_humble_dev_simulation
+    network_mode: host
+    stdin_open: true
+    tty: true
+    volumes:
+      - ~/Desktop/Rob4-Gr444-Projekt/ros2_ws:/workspace
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /workspace
+
+
+
+    privileged: true
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+
+
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=30
+      - TURTLEBOT3_MODEL=burger

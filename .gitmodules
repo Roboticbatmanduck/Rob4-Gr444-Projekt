@@ -1,0 +1,16 @@
+[submodule "ros2_ws/src/src/DynamixelSDK"]
+	path = ros2_ws/src/src/DynamixelSDK
+	url = https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+	branch = humble
+[submodule "ros2_ws/src/src/turtlebot3_msgs"]
+	path = ros2_ws/src/src/turtlebot3_msgs
+	url = https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
+	branch = humble
+[submodule "ros2_ws/src/src/turtlebot3"]
+	path = ros2_ws/src/src/turtlebot3
+	url = https://github.com/ROBOTIS-GIT/turtlebot3.git
+	branch = humble
+[submodule "ros2_ws/src/turtlebot3_simulations"]
+	path = ros2_ws/src/turtlebot3_simulations
+	url = https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+	branch = humble
