@@ -8,14 +8,23 @@ services:
 
     volumes:
       - /home/rg4444/rg4444-docker/Rob4-Gr444-Projekt/ros2_ws:/workspace
-    working_dir: /workspace
+      - /run/udev:/run/udev:ro    
+working_dir: /workspace
 
     stdin_open: true
     tty: true
 
     privileged: true
+    network_mode: host
+    pid: host
+    ipc: host
+    ulimits:
+      rtprio: 99
+      memlock: -1
     devices:
       - /dev/bus/usb:/dev/bus/usb
+      - /dev/ttyACM0
+      - /dev/ttyUSB0
 
     environment:
       - ROS_DOMAIN_ID=30
