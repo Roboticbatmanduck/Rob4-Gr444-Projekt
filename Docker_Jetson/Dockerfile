@@ -39,6 +39,7 @@ RUN export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-inf
 RUN apt-get update && apt-get install -y \
     ros-humble-ros-base \
     ros-dev-tools \
+    ros-humble-diagnostic-updater \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-vcstool \
