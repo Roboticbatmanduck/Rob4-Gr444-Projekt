@@ -40,6 +40,8 @@ RUN apt-get update && apt-get install -y \
     ros-humble-ros-base \
     ros-dev-tools \
     ros-humble-diagnostic-updater \
+    ros-humble-cv-bridge \
+    ros-humble-image-transport \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-vcstool \
