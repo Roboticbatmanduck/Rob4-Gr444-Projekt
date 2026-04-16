@@ -2,7 +2,7 @@
 set -e
 
 # Source ROS 2 Humble
-source /opt/ros/Humble/setup.bash
+source /opt/ros/humble/setup.bash
 
 # Source workspace hvis det findes
 if [ -f /workspace/install/setup.bash ]; then

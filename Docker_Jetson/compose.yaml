@@ -7,7 +7,7 @@ services:
     container_name: ros2_humble_dev
 
     volumes:
-      - ~/rg4444-docker/Rob4-Gr444-Projekt/ros2_ws/src:/workspace
+      - /home/rg4444/rg4444-docker/Rob4-Gr444-Projekt/ros2_ws:/workspace
     working_dir: /workspace
 
     stdin_open: true
