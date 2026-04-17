@@ -37,7 +37,7 @@ RUN export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-inf
 # ROS 2 Humble core (uden desktop/gazebo)
 # --------------------------------------------------
 RUN apt-get update && apt-get install -y \
-    ros-humble-ros-base \
+    ros-humble-desktop \
     ros-dev-tools \
     ros-humble-diagnostic-updater \
     ros-humble-cv-bridge \
