@@ -25,8 +25,9 @@ class AngleModelling(Node):
         self.declare_parameter('angular_velocity', 0.0) # rad/s
         self.declare_parameter('publish_rate', 20.0) # Hz
         self.declare_parameter('log_file_path', 'angle_modelling_data.csv')
-        self.declare_parameter('duration', 0.0) # seconds
-        self.declare_parameter('stop_log_duration', 1.0) # seconds to continue logging after stopping the robot
+        self.declare_parameter('duration', 5.0) # Duration of turn in seconds, set to 0 for infinite. If set to zero, the robot will keep driving and logging until the node is stopped.
+        self.declare_parameter('stop_duration', 1.0) # seconds to continue logging after stopping the robot
+        self.declare_parameter('pre_duration', 1.0)  # seconds of driving before turn
 
         # Get parameter values
         self.forward_velocity = float(self.get_parameter('forward_velocity').value)
@@ -34,7 +35,8 @@ class AngleModelling(Node):
         self.publish_rate = float(self.get_parameter('publish_rate').value)
         self.log_file_path = self.get_parameter('log_file_path').value
         self.duration = float(self.get_parameter('duration').value)
-        self.stop_log_duration = float(self.get_parameter('stop_log_duration').value)
+        self.stop_duration = float(self.get_parameter('stop_duration').value)
+        self.pre_duration = float(self.get_parameter('pre_duration').value)
 
         # Initialize timer and start time
         self.start_time = self.get_clock().now().nanoseconds / 1e9
@@ -90,7 +92,8 @@ class AngleModelling(Node):
             f"publish_rate={self.publish_rate}, "
             f"log_file_path={self.log_file_path}, "
             f"duration={self.duration}, "
-            f"stop_log_duration={self.stop_log_duration}"
+            f"stop_duration={self.stop_duration}, "
+            f"pre_duration={self.pre_duration}"
         )
 
     # Function for IMU callback to update current yaw and angular velocity
@@ -133,32 +136,28 @@ class AngleModelling(Node):
     def timer_callback(self):
         now_time = self.get_clock().now().nanoseconds / 1e9
         elapsed_time = now_time - self.start_time
-
-        if not self.stopping and self.duration > 0 and elapsed_time >= self.duration:
+        #Stop phase
+        if not self.stopping and self.duration > 0 and elapsed_time >= self.pre_duration + self.duration:
             self.get_logger().info('Duration reached, entering stopping phase.')
             self.stopping = True
             self.stop_start_time = now_time
-
         if self.stopping:
             stop_elapsed = now_time - self.stop_start_time
             self.publish_cmd(0.0, 0.0)
             self.log_row(now_time, elapsed_time, 0.0, 0.0)
-
-            if stop_elapsed >= self.stop_log_duration:
+            if stop_elapsed >= self.stop_duration:
                 self.get_logger().info('Stop log duration reached, shutting down.')
                 self.csv_file.flush()
                 self.csv_file.close()
                 rclpy.shutdown()
             return
-
+        # pre-phase
+        if elapsed_time < self.pre_duration:
+            self.publish_cmd(self.forward_velocity, 0.0)
+            self.log_row(now_time, elapsed_time, self.forward_velocity, 0.0)
+            return
         self.publish_cmd(self.forward_velocity, self.angular_velocity)
-        self.log_row(
-            now_time,
-            elapsed_time,
-            self.forward_velocity,
-            self.angular_velocity
-        )
-
+        self.log_row(now_time, elapsed_time, self.forward_velocity, self.angular_velocity)
     # Function to stop the robot by publishing zero velocities
     def stop_robot(self):
         self.publish_cmd(0.0, 0.0)
@@ -204,10 +203,11 @@ if __name__ == '__main__':
 Example of run command with all parameters
 ros2 run anglemodelling anglemodelling_node \
   --ros-args \
-  -p forward_velocity:=0.0 \
-  -p angular_velocity:=0.0 \
+  -p forward_velocity:=0.10 \
+  -p angular_velocity:=0.10 \
   -p publish_rate:=20.0 \
+  -p pre_duration:=1.0 \
   -p duration:=5.0 \
-  -p stop_log_duration:=2.0 \
+  -p stop_duration:=2.0 \
   -p log_file_path:=/home/oliver/angle_log.csv
 """
