@@ -73,7 +73,7 @@ class StepInputNode(Node):
             log_dir = os.path.expanduser('~/ros2_logs')
             os.makedirs(log_dir, exist_ok=True)
             self.log_file = open(os.path.join(log_dir, 'speed_log.csv'), 'w')
-            self.log_file.write("time,speed\n")
+            self.log_file.write("time,cmd_vel_linear,speed\n")
             self.get_logger().warn(f'Logging to: {self.log_file.name}')
         except Exception as e:
             self.get_logger().warn(f'Error in logging: {e}')
@@ -89,7 +89,6 @@ class StepInputNode(Node):
     def _on_timer(self):
         t = self._now_sec()
         msg = Twist()
-        msg.header.stamp = self.get_clock().now().to_msg()
         phase = t % self.duration
         if phase >= self.step_time:
             msg.linear.x = self.step_amplitude
@@ -131,8 +130,10 @@ class StepInputNode(Node):
     
     def destroy_node(self,msg):
         self.log_file.close()
-        msg.twist.linear.x = 0.0
-        msg.twist.angular.z = 0.0
+        stop_msg = Twist()
+        stop_msg.linear.x = 0.0
+        stop_msg.angular.z = 0.0
+        self.publisher.publish(stop_msg)
         return super().destroy_node()
 
 def main():
