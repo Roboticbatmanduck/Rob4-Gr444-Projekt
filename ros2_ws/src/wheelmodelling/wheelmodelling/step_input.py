@@ -4,7 +4,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import TwistStamped, Twist
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
@@ -47,7 +47,7 @@ class StepInputNode(Node):
         self.joint_topic = self.get_parameter('joint_state_topic').value
         #Publisher and timer
         #send twist command to cmd_topic with 10 up to backlog
-        self.publisher = self.create_publisher(TwistStamped, self.cmd_topic, 10)
+        self.publisher = self.create_publisher(Twist, self.cmd_topic, 10)
         #dt is the sampling time in seconds, 1/(20 Hz) = 0.05 second
         dt = 1.0/self.publish_rate if self.publish_rate > 0 else 0.05
         #creates the timer which runs every dt time, the function _on_timer
@@ -88,18 +88,19 @@ class StepInputNode(Node):
     #Funcktionen der sørger for at lave et square-wave signal til motoren i en twist besked
     def _on_timer(self):
         t = self._now_sec()
-        msg = TwistStamped()
+        msg = Twist()
         msg.header.stamp = self.get_clock().now().to_msg()
         phase = t % self.duration
-        self.log_file.write(f"{t},{self.latest_speed}\n")
         if phase >= self.step_time:
-            msg.twist.linear.x = self.step_amplitude
-            msg.twist.angular.z = self.angular_z
+            msg.linear.x = self.step_amplitude
+            msg.angular.z = self.angular_z
         else:
-            msg.twist.linear.x = 0.0
-            msg.twist.angular.z = 0.0
-
+            msg.linear.x = 0.0
+            msg.angular.z = 0.0
+        cmd_v = msg.linear.x
         self.publisher.publish(msg)
+        self.log_file.write(f"{t},{cmd_v},{self.latest_speed}\n")
+        self.log_file.flush()
 
     def _on_joint_states(self, msg):
         # JointState har: msg.name, msg.position, msg.velocity, msg.effort
@@ -112,11 +113,6 @@ class StepInputNode(Node):
             right = msg.velocity[1]
             self.get_logger().info(f"left={left:.5f}, right={right:.5f}")
             speed = (left + right) / 2.0   # rad/s
-        
-            # # Konverter til linear speed:
-            # wheel_radius = 0.033  # Turtlebot3 Burger wheel radius in meters
-            # speed = wheel_vel * wheel_radius  # m/s
-
             t = self._now_sec()
             self.latest_speed = speed
 
