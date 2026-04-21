@@ -70,7 +70,7 @@ class StepInputNode(Node):
                                f'step time = {self.step_time}s, step amplitude = {self.step_amplitude}m/s '
                                f'angular z = {self.angular_z}rad/s, duration = {self.duration}s')
         try:
-            log_dir = os.path.expanduser('/workspace/log')
+            log_dir = os.path.expanduser('/workspace/logs')
             os.makedirs(log_dir, exist_ok=True)
             self.log_file = open(os.path.join(log_dir, 'speed_log.csv'), 'w')
             self.log_file.write("time,cmd_vel_linear,speed\n")
@@ -128,7 +128,7 @@ class StepInputNode(Node):
             self.last_log_t = t
             self.counter += 1
     
-    def destroy_node(self,msg):
+    def destroy_node(self):
         self.log_file.close()
         stop_msg = Twist()
         stop_msg.linear.x = 0.0
