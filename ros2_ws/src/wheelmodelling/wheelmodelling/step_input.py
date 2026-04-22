@@ -127,7 +127,7 @@ class StepInputNode(Node):
 
     def _on_odom(self, msg):
         v = msg.twist.twist.linear
-        self.odom_z = msg.twist.twist.angular
+        self.odom_z = msg.twist.twist.angular.z
         speed = np.sqrt(v.x**2 + v.y**2 + v.z**2)
         t = self._now_sec()
         self.get_logger().info(f't={t:5.2f}s, speed = {speed:5.3f}m/s, angular = {self.odom_z:5.3f}')
