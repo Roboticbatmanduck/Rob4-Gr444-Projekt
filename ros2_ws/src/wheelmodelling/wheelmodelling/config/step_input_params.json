@@ -2,6 +2,6 @@
 	"publish_rate": 20,
 	"step_time": 1, 
 	"step_amplitude": 0.11, 
-	"angular_z": 0, 
+	"angular_z": 0.1, 
 	"duration": 5
 }
