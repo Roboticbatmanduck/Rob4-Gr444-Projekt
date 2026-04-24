@@ -6,7 +6,7 @@ import rclpy
 from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Imu, JointState
 from turtlebot3_msgs.msg import SensorState
 
 # Helper function to convert quaternion to yaw angle
@@ -28,6 +28,7 @@ class AngleModelling(Node):
         self.declare_parameter('duration', 5.0) # Duration of turn in seconds, set to 0 for infinite. If set to zero, the robot will keep driving and logging until the node is stopped.
         self.declare_parameter('stop_duration', 1.0) # seconds to continue logging after stopping the robot
         self.declare_parameter('pre_duration', 1.0)  # seconds of driving before turn
+        self.declare_parameter('post_duration', 1.0)  # seconds of driving after turn
 
         # Get parameter values
         self.forward_velocity = float(self.get_parameter('forward_velocity').value)
@@ -37,6 +38,7 @@ class AngleModelling(Node):
         self.duration = float(self.get_parameter('duration').value)
         self.stop_duration = float(self.get_parameter('stop_duration').value)
         self.pre_duration = float(self.get_parameter('pre_duration').value)
+        self.post_duration = float(self.get_parameter('post_duration').value)
 
         # Initialize timer and start time
         self.start_time = self.get_clock().now().nanoseconds / 1e9
@@ -44,6 +46,7 @@ class AngleModelling(Node):
         # State IMU and SensorState data availability
         self.have_imu = False
         self.have_sensor_state = False
+        self.have_joint_state = False
 
         # Initialize variables to store current IMU data
         self.current_yaw = 0.0
@@ -55,6 +58,11 @@ class AngleModelling(Node):
         self.right_encoder = 0
         self.current_sensor_stamp = 0.0
 
+        # Initialize variables to store current JointState data
+        self.left_wheel_velocity = 0.0
+        self.right_wheel_velocity = 0.0
+        self.current_joint_state_stamp = 0.0
+
         # State to track if the robot has been stopped after duration is reached
         self.stopping = False
         self.stop_start_time = None
@@ -63,6 +71,7 @@ class AngleModelling(Node):
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.imu_sub = self.create_subscription(Imu, '/imu',self.imu_callback, 50)
         self.sensor_state_sub = self.create_subscription(SensorState, '/sensor_state', self.sensor_state_callback, 50)
+        self.joint_state_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 50)
 
         # Create timer for publishing commands and logging data
         self.timer = self.create_timer(1.0 / self.publish_rate, self.timer_callback)
@@ -81,7 +90,10 @@ class AngleModelling(Node):
             'imu_ang_vel_z',
             'sensor_state_time',
             'left_encoder',
-            'right_encoder'
+            'right_encoder',
+            'joint_state_time',
+            'left_wheel_velocity',
+            'right_wheel_velocity'
         ])
 
         # Write initial log message with parameter values
@@ -93,7 +105,8 @@ class AngleModelling(Node):
             f"log_file_path={self.log_file_path}, "
             f"duration={self.duration}, "
             f"stop_duration={self.stop_duration}, "
-            f"pre_duration={self.pre_duration}"
+            f"pre_duration={self.pre_duration}, "
+            f"post_duration={self.post_duration}"
         )
 
     # Function for IMU callback to update current yaw and angular velocity
@@ -110,6 +123,20 @@ class AngleModelling(Node):
         self.right_encoder = msg.right_encoder
         self.current_sensor_stamp = msg.header.stamp.sec + msg.header.stamp.nanosec / 1e9
         self.have_sensor_state = True
+
+    # Function for JointState callback to update current wheel velocities
+    def joint_state_callback(self, msg: JointState):
+        try:
+            left_index = msg.name.index('wheel_left_joint')
+            right_index = msg.name.index('wheel_right_joint')
+        except ValueError:
+            return
+
+        if len(msg.velocity) > max(left_index, right_index):
+            self.left_wheel_velocity = msg.velocity[left_index]
+            self.right_wheel_velocity = msg.velocity[right_index]
+            self.current_joint_state_stamp = msg.header.stamp.sec + msg.header.stamp.nanosec / 1e9
+            self.have_joint_state = True
     
     def publish_cmd(self, linear_x: float, angular_z: float):
         cmd = Twist()
@@ -128,7 +155,10 @@ class AngleModelling(Node):
             f'{self.current_imu_ang_vel_z:.6f}' if self.have_imu else '',
             f'{self.current_sensor_stamp:.6f}' if self.have_sensor_state else '',
             self.left_encoder if self.have_sensor_state else '',
-            self.right_encoder if self.have_sensor_state else ''
+            self.right_encoder if self.have_sensor_state else '',
+            f'{self.current_joint_state_stamp:.6f}' if self.have_joint_state else '',
+            f'{self.left_wheel_velocity:.6f}' if self.have_joint_state else '',
+            f'{self.right_wheel_velocity:.6f}' if self.have_joint_state else ''
         ])
         self.csv_file.flush()
 
@@ -137,7 +167,7 @@ class AngleModelling(Node):
         now_time = self.get_clock().now().nanoseconds / 1e9
         elapsed_time = now_time - self.start_time
         #Stop phase
-        if not self.stopping and self.duration > 0 and elapsed_time >= self.pre_duration + self.duration:
+        if not self.stopping and self.duration > 0 and elapsed_time >= self.pre_duration + self.duration + self.post_duration:
             self.get_logger().info('Duration reached, entering stopping phase.')
             self.stopping = True
             self.stop_start_time = now_time
@@ -156,8 +186,17 @@ class AngleModelling(Node):
             self.publish_cmd(self.forward_velocity, 0.0)
             self.log_row(now_time, elapsed_time, self.forward_velocity, 0.0)
             return
-        self.publish_cmd(self.forward_velocity, self.angular_velocity)
-        self.log_row(now_time, elapsed_time, self.forward_velocity, self.angular_velocity)
+        # turn phase
+        if elapsed_time < self.pre_duration + self.duration:
+            self.publish_cmd(self.forward_velocity, self.angular_velocity)
+            self.log_row(now_time, elapsed_time, self.forward_velocity, self.angular_velocity)
+            return
+        # post-phase
+        if elapsed_time < self.pre_duration + self.duration + self.post_duration:
+            self.publish_cmd(self.forward_velocity, 0.0)
+            self.log_row(now_time, elapsed_time, self.forward_velocity, 0.0)
+            return
+
     # Function to stop the robot by publishing zero velocities
     def stop_robot(self):
         self.publish_cmd(0.0, 0.0)
@@ -208,6 +247,7 @@ ros2 run anglemodelling anglemodelling_node \
   -p publish_rate:=20.0 \
   -p pre_duration:=1.0 \
   -p duration:=5.0 \
+  -p post_duration:=1.0 \
   -p stop_duration:=2.0 \
   -p log_file_path:=/home/oliver/angle_log.csv
 """

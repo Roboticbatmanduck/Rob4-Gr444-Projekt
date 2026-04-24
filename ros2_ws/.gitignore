@@ -206,3 +206,8 @@ AMENT_IGNORE
 # End of https://www.toptal.com/developers/gitignore/api/ros2,python
 # Log files 
 .log
+
+# Project runtime/test artifacts
+logs/
+*.csv
+*.pt
