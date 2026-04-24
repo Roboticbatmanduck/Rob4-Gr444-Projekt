@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-cartographer \
     ros-humble-cartographer-ros \
     ros-humble-nav2-bringup \
+    ros-humble-vision-msgs \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-vcstool \
@@ -55,6 +56,11 @@ RUN apt-get update && apt-get install -y \
  RUN pip install \
     Ultralytics \
     opencv-python
+
+#YOLO fix
+#ROS2 Humble cv_bridge needs NumPy 1.x
+
+RUN pip3 install --no-cache-dir --force-reinstall numpy==1.26.4
 
 
 # ----------------------------

@@ -53,7 +53,8 @@ RUN pip install --no-cache-dir \
         numpy \
         pyrealsense2 \
         matplotlib \
-        lark
+        lark \
+	--force-reinstall numpy==1.26.4
 
 
 # -------------------------
@@ -70,6 +71,7 @@ RUN echo "deb [arch=$(dpkg --print-architecture) \
 
 RUN apt update && apt install -y \
     ros-jazzy-desktop \
+    ros-jazzy-vision-msgs \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-vcstool \
