@@ -1,10 +1,12 @@
 services:
   turtle_bot:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     image: rob4-turtle
     container_name: ros2_humble_dev
+
+    runtime: nvidia
 
     volumes:
       - /home/rg4444/rg4444-docker/Rob4-Gr444-Projekt/ros2_ws:/workspace
@@ -33,3 +35,5 @@ services:
       - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
       - DISPLAY=:1
       - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all

@@ -15,7 +15,7 @@ class YoloPersonCenter(Node):
         super().__init__("yolo_person_center")
 
         self.bridge = CvBridge()
-        self.model = YOLO("yolov8n.pt")
+        self.model = YOLO("/workspace/src/follow_me/engine/best.engine")
 
         # Low-latency QoS (important for camera)
         self.qos = QoSProfile(

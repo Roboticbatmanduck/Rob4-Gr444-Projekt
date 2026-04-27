@@ -1,7 +1,7 @@
 # --------------------------------------------------
 # Ultralytics Jetson base (JetPack 6 / Ubuntu 22.04)
 # --------------------------------------------------
-FROM ultralytics/ultralytics:latest-jetson-jetpack6
+FROM ultralytics/ultralytics:8.3.6-jetson-jetpack6
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8

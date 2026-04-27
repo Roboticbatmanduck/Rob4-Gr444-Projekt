@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'follow_me'
+package_name = 'camera_module'
 
 setup(
     name=package_name,
@@ -13,10 +13,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ROB4',
-    maintainer_email='oliverfast18@gmail.com',
-    description='Follow-me YOLO system for Jetson Orin Nano and Realsense D435i',
-    license='MIT',
+    maintainer='root',
+    maintainer_email='root@todo.todo',
+    description='TODO: Package description',
+    license='TODO: License declaration',
     extras_require={
         'test': [
             'pytest',
@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "person_center = follow_me.yolo_person_center:main",
+	'yolo_basic = camera_module.yolo_basic:main',
+        'yolo_viz = camera_module.yolo_viz:main',
         ],
     },
 )
