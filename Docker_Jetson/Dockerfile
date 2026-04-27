@@ -91,6 +91,14 @@ RUN apt-get update && apt-get install -y \
     librealsense2-dev \
     librealsense2-dbg && \
     rm -rf /var/lib/apt/lists/*
+    
+# --------------------------------------------------
+# RealSense ROS 2 wrapper
+# --------------------------------------------------
+RUN apt-get update && apt-get install -y \
+    ros-humble-realsense2-camera \
+    ros-humble-realsense2-description \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
 RUN echo "export LDS_MODEL=LDS-01" >> /root/.bashrc

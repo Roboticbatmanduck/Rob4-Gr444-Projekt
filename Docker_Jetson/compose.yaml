@@ -8,6 +8,7 @@ services:
 
     volumes:
       - /home/rg4444/rg4444-docker/Rob4-Gr444-Projekt/ros2_ws:/workspace
+      - /dev:/dev
       - /run/udev:/run/udev:ro    
     working_dir: /workspace
     stdin_open: true
@@ -28,3 +29,4 @@ services:
     environment:
       - ROS_DOMAIN_ID=30
       - TURTLEBOT3_MODEL=burger
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
