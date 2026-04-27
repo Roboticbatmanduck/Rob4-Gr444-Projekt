@@ -1,7 +1,7 @@
 services:
   turtle_bot:
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile
     image: rob4-turtle
     container_name: ros2_humble_dev
