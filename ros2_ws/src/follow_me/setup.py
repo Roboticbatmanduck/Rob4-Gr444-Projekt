@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             "person_center = follow_me.yolo_person_center:main",
+            "command_sender = follow_me.command_sender:main"
         ],
     },
 )
