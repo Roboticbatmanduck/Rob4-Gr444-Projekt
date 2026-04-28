@@ -1,7 +1,7 @@
 # --------------------------------------------------
 # Ultralytics Jetson base (JetPack 6 / Ubuntu 22.04)
 # --------------------------------------------------
-FROM ultralytics/ultralytics:latest-jetson-jetpack6
+FROM ultralytics/ultralytics:8.3.6-jetson-jetpack6
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8
@@ -11,7 +11,7 @@ ENV LC_ALL=en_US.UTF-8
 # Base utilities (minimalt)
 # --------------------------------------------------
 RUN apt-get update && apt-get install -y \
-    software-properties-common\
+    software-properties-common \
     locales \
     curl \
     gnupg \
@@ -42,6 +42,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-diagnostic-updater \
     ros-humble-cv-bridge \
     ros-humble-image-transport \
+    ros-humble-vision-msgs \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-vcstool \
@@ -90,9 +91,22 @@ RUN apt-get update && apt-get install -y \
     librealsense2-dev \
     librealsense2-dbg && \
     rm -rf /var/lib/apt/lists/*
+    
+# --------------------------------------------------
+# RealSense ROS 2 wrapper
+# --------------------------------------------------
+RUN apt-get update && apt-get install -y \
+    ros-humble-realsense2-camera \
+    ros-humble-realsense2-description \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
 RUN echo "export LDS_MODEL=LDS-01" >> /root/.bashrc
+
+#YOLO / ROS Humble Python Compatability
+#IMPORTANT: ROS2 Humble cv_bridge needs NumPy 1.x.
+#Newer pip OpenCV can pull NumPy 2.x and break cv_bridge
+RUN pip3 install --no-cache-dir --force-reinstall numpy==1.26.4
 
 WORKDIR ${COLCON_WS}
 
