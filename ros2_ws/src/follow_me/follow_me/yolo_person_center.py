@@ -14,11 +14,27 @@ class YoloPersonCenter(Node):
     def __init__(self):
         super().__init__("yolo_person_center")
 
-        self.bridge = CvBridge()
-        self.model = YOLO("/workspace/src/follow_me/engine/best.engine")
+        self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
+        self.declare_parameter("center_topic", "/person_center")
+        self.declare_parameter("model_path", "/workspace/src/follow_me/engine/best.engine")
+        self.declare_parameter("confidence_threshold", 0.5)
+        self.declare_parameter("distance_penalty", 0.002)
+        self.declare_parameter("lost_frame_limit", 10)
 
-        # Low-latency QoS (important for camera)
-        self.qos = QoSProfile(
+        self.image_topic = self.get_parameter("image_topic").value
+        self.center_topic = self.get_parameter("center_topic").value
+        self.model_path = self.get_parameter("model_path").value
+        self.confidence_threshold = float(self.get_parameter("confidence_threshold").value)
+        self.distance_penalty = float(self.get_parameter("distance_penalty").value)
+        self.lost_frame_limit = int(self.get_parameter("lost_frame_limit").value)
+
+        self.bridge = CvBridge()
+        self.model = YOLO(self.model_path, task="detect")
+
+        self.last_center = None
+        self.lost_frames = 0
+
+        qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             history=HistoryPolicy.KEEP_LAST,
             depth=1,
@@ -26,48 +42,77 @@ class YoloPersonCenter(Node):
 
         self.sub = self.create_subscription(
             Image,
-            "/camera/camera/color/image_raw",
+            self.image_topic,
             self.image_callback,
-            self.qos,
+            qos,
         )
 
         self.pub = self.create_publisher(
             Point,
-            "/person_center",
+            self.center_topic,
             10,
         )
 
         self.get_logger().info("YOLO person center node started")
+        self.get_logger().info(f"Image topic: {self.image_topic}")
+        self.get_logger().info(f"Center topic: {self.center_topic}")
+        self.get_logger().info(f"Model path: {self.model_path}")
 
     def image_callback(self, msg):
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
-        results = self.model(frame, verbose=False)
+        results = self.model.predict(frame, verbose=False, task="detect")
 
-        best_person = None
-        best_conf = 0.0
+        best_target = None
+        best_score = -1e9
 
         for result in results:
             for box in result.boxes:
                 cls = int(box.cls[0])
                 conf = float(box.conf[0])
 
-                if cls == 0 and conf > best_conf:
-                    best_conf = conf
-                    best_person = box
+                # YOLO class 0 = person
+                if cls != 0:
+                    continue
 
-        if best_person is None:
+                if conf < self.confidence_threshold:
+                    continue
+
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+
+                center_x = (x1 + x2) / 2.0
+                center_y = (y1 + y2) / 2.0
+
+                if self.last_center is not None:
+                    dx = center_x - self.last_center[0]
+                    dy = center_y - self.last_center[1]
+                    distance = (dx * dx + dy * dy) ** 0.5
+                else:
+                    distance = 0.0
+
+                score = conf - self.distance_penalty * distance
+
+                if score > best_score:
+                    best_score = score
+                    best_target = (center_x, center_y, conf)
+
+        if best_target is None:
+            self.lost_frames += 1
+
+            if self.lost_frames >= self.lost_frame_limit:
+                self.last_center = None
+
             return
 
-        x1, y1, x2, y2 = best_person.xyxy[0].tolist()
+        center_x, center_y, conf = best_target
 
-        center_x = (x1 + x2) / 2.0
-        center_y = (y1 + y2) / 2.0
+        self.last_center = (center_x, center_y)
+        self.lost_frames = 0
 
         point = Point()
         point.x = float(center_x)
         point.y = float(center_y)
-        point.z = float(best_conf)
+        point.z = float(conf)
 
         self.pub.publish(point)
 
@@ -75,9 +120,14 @@ class YoloPersonCenter(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = YoloPersonCenter()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":
