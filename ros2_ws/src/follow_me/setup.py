@@ -25,6 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             "person_center = follow_me.yolo_person_center:main",
+            'distance_regulator = follow_me.distance_regulator:main',
+            'angle_regulator = follow_me.angle_regulator:main',
             "command_sender = follow_me.command_sender:main"
         ],
     },
