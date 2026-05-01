@@ -22,7 +22,7 @@ class YoloPersonCenter(Node):
     def setup(self): #this function is called in the initialization of the node to set up parameters, the YOLO model, and the ROS subscriptions and publications.
 
         #Declare parameters for easy yaml configuration and command line overrides. 
-        self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
+        self.declare_parameter("image_topic", "/camera/camera/image_raw")
         self.declare_parameter("center_topic", "/person_center")
         self.declare_parameter("model_path", "yolov8n.pt")
         self.declare_parameter("confidence_threshold", 0.5)
