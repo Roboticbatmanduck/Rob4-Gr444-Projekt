@@ -13,8 +13,8 @@ def generate_launch_description():
 
     turtlebot3_gazebo_dir = get_package_share_directory('turtlebot3_gazebo')
     simulation_dir = get_package_share_directory('simulation')
-    # Start followme-world UDEN robot
-    start_followme_world = IncludeLaunchDescription(
+    # Start house-world UDEN robot
+    start_house_world = IncludeLaunchDescription(
     PythonLaunchDescriptionSource(
         os.path.join(
             get_package_share_directory('gazebo_ros'),
@@ -24,10 +24,11 @@ def generate_launch_description():
     ),
     launch_arguments={
         'world': os.path.join(
-            simulation_dir,
+            turtlebot3_gazebo_dir,
             'worlds',
-            'followme.world'
+            'turtlebot3_house.world'
         ),
+        'extra_gazebo_args': '-s libgazebo_ros_factory.so'
     }.items()
     )
 
@@ -62,33 +63,7 @@ def generate_launch_description():
                 output='screen'
             )
         ]
-    )
-
-# --- YOLO NODE (delayed) ---
-    yolo_node = TimerAction(
-    	period=8.0,
-    	actions=[
-            Node(
-        	    package='follow_me',
-        	    executable='person_center_pc',
-        	    name='person_center_pc',
-        	    output='screen',
-            )
-        ]
-    )
-
-# --- SIMPLE FOLLOWER NODE (delayed) ---
-    follower_node = TimerAction(
-    	period=9.0,
-    	actions=[
-        	Node(
-            	package='follow_me',
-            	executable='simple_follower',
-        		name='simple_follower',
-        		output='screen',
-            )
-        ]
-    )
+        )
 
 
     return LaunchDescription([
@@ -96,9 +71,7 @@ def generate_launch_description():
             name='GAZEBO_MODEL_PATH',
             value=os.path.join(simulation_dir, 'models')
         ),
-        start_followme_world,
+        start_house_world,
         spawn_robot_delayed,
-        start_rqt_image_view,
-        yolo_node,
-        follower_node
+        start_rqt_image_view
     ])

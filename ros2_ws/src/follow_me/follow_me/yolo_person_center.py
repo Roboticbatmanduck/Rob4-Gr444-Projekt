@@ -24,7 +24,7 @@ class YoloPersonCenter(Node):
         #Declare parameters for easy yaml configuration and command line overrides. 
         self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
         self.declare_parameter("center_topic", "/person_center")
-        self.declare_parameter("model_path", "yolov8n.pt")
+        self.declare_parameter("model_path", "/workspace/src/follow_me/engine/best.engine")
         self.declare_parameter("confidence_threshold", 0.5)
         self.declare_parameter("lost_frame_limit", 10)
 
@@ -37,7 +37,7 @@ class YoloPersonCenter(Node):
 
         #Define cv2 bridge and YOLO model
         self.bridge = CvBridge()
-        self.model = YOLO(self.model_path, task="detect")
+        self.model = YOLO(self.model_path, task="detect", conf=self.confidence_threshold)
 
         #Remember values of the last detected person center and how many frames have lost detection in a row.
         self.last_center = None
