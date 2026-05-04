@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import Point
+from follow_me_interfaces.msg import PersonBBox
 from std_msgs.msg import Float32
 
 from cv_bridge import CvBridge
