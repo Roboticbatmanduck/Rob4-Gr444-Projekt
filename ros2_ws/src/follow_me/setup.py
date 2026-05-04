@@ -30,7 +30,8 @@ setup(
             'distance_regulator = follow_me.distance_regulator:main',
             'angle_regulator = follow_me.angle_regulator:main',
             "person_angle = follow_me.person_angle:main",
-            "command_sender = follow_me.command_sender:main"
+            "command_sender = follow_me.command_sender:main",
+            'afstand_node = follow_me.afstand:main'
         ],
     },
 )
