@@ -33,7 +33,7 @@ def generate_launch_description():
 
     # Spawn robot EFTER delay
     spawn_robot_delayed = TimerAction(
-        period=5.0,  # ⏱️ Justér evt. til 6–8 sek
+        period=15.0,  # ⏱️ Justér evt. til 6–8 sek
         actions=[
             Node(
                 package='gazebo_ros',
@@ -54,7 +54,7 @@ def generate_launch_description():
 
 
     start_rqt_image_view = TimerAction(
-        period=7.0,  # lidt efter robot-spawn
+        period=20.0,  # lidt efter robot-spawn
         actions=[
             Node(
                 package='rqt_image_view',
@@ -66,7 +66,7 @@ def generate_launch_description():
 
 # --- YOLO NODE (delayed) ---
     yolo_node = TimerAction(
-    	period=8.0,
+    	period=22.0,
     	actions=[
             Node(
         	    package='follow_me',
@@ -79,7 +79,7 @@ def generate_launch_description():
 
 # --- SIMPLE FOLLOWER NODE (delayed) ---
     follower_node = TimerAction(
-    	period=9.0,
+    	period=24.0,
     	actions=[
         	Node(
             	package='follow_me',
