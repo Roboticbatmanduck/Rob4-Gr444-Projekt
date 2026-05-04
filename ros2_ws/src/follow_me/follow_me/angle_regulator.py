@@ -12,22 +12,23 @@ class AngleRegulator (Node):
     def __init__(self):
         super().__init__('angle_regulator')
 
-        #Store the latest reference and measured angle values
-        self.reference = 0.0
-        self.measured = 0.0
+        self.declare_parameter("reference", 15.0)
+        self.declare_parameter("measured_topic", "/angle/measured")
+        self.declare_parameter("output_topic", "/angular_velocity")
+        self.declare_parameter("publish_rate", 20.0)
 
-        #Subscriber for the reference angle
-        self.create_subscription(
-            Float32,
-            '/angle/reference',
-            self.reference_callback,
-            10
-        )
+        # Get parameters
+        self.reference = float(self.get_parameter("reference").value)
+        self.measured_topic = self.get_parameter("measured_topic").value
+        self.output_topic = self.get_parameter("output_topic").value
+        self.publish_rate = float(self.get_parameter("publish_rate").value)
+
+        self.measured = self.reference # Initialize measured angle to reference to avoid large initial error
 
         #Subscriber for the measured angle
         self.create_subscription(
             Float32,
-            '/angle/measured',
+            self.measured_topic,
             self.measured_callback,
             10
         )
@@ -35,25 +36,20 @@ class AngleRegulator (Node):
         #Publisher for the angular velocity command
         self.control_publisher = self.create_publisher(
             Float32,
-            '/angular_velocity',
+            self.output_topic,
             10
         )
 
         #Timer that runs the control loop at 20 Hz
-        period = 1.0 / 20.0
+        period = 1.0 / self.publish_rate
         self.timer = self.create_timer(period, self.compute_and_publish)
 
         #Log that the node has startet succesfully
         self.get_logger().info('Angle regulator started')
 
-
-    def reference_callback(self, msg):
-        #Callback function for the reference angle. Store the latest value
-        self.reference = msg.data
-
     def measured_callback(self, msg):
         #Callback function for the measured angle. Stores the latest value
-        self.measured = msg.data
+        self.measured = float(msg.data)
     
     def compute_and_publish(self):
         """Computes the control error and publishes the control signal.
@@ -67,7 +63,7 @@ class AngleRegulator (Node):
 
         #Publish the control signal as angular velocity
         msg = Float32()
-        msg.data = control_signal
+        msg.data = float(control_signal)
         self.control_publisher.publish(msg)
 
     def compute_control(self, error):

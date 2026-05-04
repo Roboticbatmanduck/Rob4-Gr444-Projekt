@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import Point
+from follow_me_interfaces.msg import PersonBBox
 from cv_bridge import CvBridge
 
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
@@ -17,27 +17,27 @@ class YoloPersonCenter(Node):
         self.setup()
 
         #Log the startup message and the subscribed and published topics
-        self.get_logger().info(f"YoloPersonCenter node has been started. Subscribed to {self.image_topic} and publishing to {self.center_topic}.")
+        self.get_logger().info(f"YoloPersonCenter node is started.")
 
     def setup(self): #this function is called in the initialization of the node to set up parameters, the YOLO model, and the ROS subscriptions and publications.
 
         #Declare parameters for easy yaml configuration and command line overrides. 
         self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
-        self.declare_parameter("center_topic", "/person_center")
+        self.declare_parameter("bbox_topic", "/person_bbox")
         self.declare_parameter("model_path", "/workspace/src/follow_me/engine/best.engine")
         self.declare_parameter("confidence_threshold", 0.7)
         self.declare_parameter("lost_frame_limit", 2)
 
         #Get parameters
         self.image_topic = self.get_parameter("image_topic").value
-        self.center_topic = self.get_parameter("center_topic").value
+        self.bbox_topic = self.get_parameter("bbox_topic").value
         self.model_path = self.get_parameter("model_path").value
         self.confidence_threshold = float(self.get_parameter("confidence_threshold").value)
         self.lost_frame_limit = int(self.get_parameter("lost_frame_limit").value)
 
         #Define cv2 bridge and YOLO model
         self.bridge = CvBridge()
-        self.model = YOLO(self.model_path, task="detect", conf=self.confidence_threshold)
+        self.model = YOLO(self.model_path, task="detect")
 
         #Remember values of the last detected person center and how many frames have lost detection in a row.
         self.last_center = None
@@ -59,8 +59,8 @@ class YoloPersonCenter(Node):
         )
 
         self.pub = self.create_publisher(
-            Point, 
-            self.center_topic, 
+            PersonBBox, 
+            self.bbox_topic, 
             10,
         )
 
@@ -69,14 +69,14 @@ class YoloPersonCenter(Node):
         # The function converts the incomming image to Opencv format
         # runs the YOLO model on the image to detect people and their confidence scores
         # selects the person closest to the previous centerpoint to maintain tracking of the same person across frames
-        # publishes the center point of the detected person as a Point message on the person_center topic
+        # publishes the center point of the detected person as a PersonBBox message on the person_bbox topic
 
         #Convert the ROS image message to an OpenCV image with bgr8 for the YOLO model
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
         #Run the YOLO model on the image with the specified confidence threshold. Verbose=False will turn off clutter messages in the terminal. The result contains the detected bounding boxes and confidence scores.
         #If more than one person is detected, results will contain multiple detections, which will be sorted by the find_best_target function.  
-        results = self.model(frame, verbose=False, conf=self.confidence_threshold)
+        results = self.model(frame, verbose=False)
 
         best_target = self.find_best_target(results)
 
@@ -118,7 +118,7 @@ class YoloPersonCenter(Node):
                 center_y = (y1 + y2) / 2
 
                 # Save center point and confidence score of this detection
-                target = (center_x, center_y, confidence)
+                target = (x1, y1, x2, y2, center_x, center_y, confidence)
 
                 if self.last_center is None:
                     #if we don't have a previous target, we want to select the one with the highest confidence score.
@@ -144,7 +144,7 @@ class YoloPersonCenter(Node):
         dx = center_x - self.last_center[0]
         dy = center_y - self.last_center[1]
 
-        #compute the Euclidean distance using the Pythagorean theorem and return it (**0.5 is equivalent to the square root)
+        #compute the Euclidean distance using the Pythagorean theorem and return (**0.5 is equivalent to the square root)
         return (dx * dx + dy * dy) ** 0.5
     
     def handle_lost_target(self):
@@ -158,20 +158,23 @@ class YoloPersonCenter(Node):
             self.last_center = None
 
     def publish_target(self, target):
-        #This function publishes the detected target as a Point message on the person_center topic and resets the lost frame count.
+        #This function publishes the detected target as a PersonBBox message on the person_bbox topic and resets the lost frame count.
 
-        center_x, center_y, confidence = target
+        (x1, y1, x2, y2, center_x, center_y, confidence) = target
 
         #Update last center and reset lost frame count, days since last incident to zero ;D
         self.last_center = (center_x, center_y)
         self.lost_frames = 0
 
-        point = Point()
-        point.x = float(center_x)
-        point.y = float(center_y)
-        point.z = float(confidence)
+        bbox = PersonBBox()
+        bbox.x1 = float(x1)
+        bbox.y1 = float(y1)
+        bbox.x2 = float(x2)
+        bbox.y2 = float(y2)
+        bbox.confidence = float(confidence)
+        bbox.valid = True
 
-        self.pub.publish(point)
+        self.pub.publish(bbox)
 
 #typical ROS2 Python node main function, which initializes the node, spins it to keep it alive and handle shutdown gracefully when needed.
 def main(args=None):

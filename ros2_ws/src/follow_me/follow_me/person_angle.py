@@ -1,9 +1,9 @@
 import rclpy
 from rclpy.node import Node
 
-from geometry_msgs.msg import Point
+from follow_me_interfaces.msg import PersonBBox
 from sensor_msgs.msg import CameraInfo
-from std_msgs.msg import Float64
+from std_msgs.msg import Float32
 
 import math
 
@@ -12,10 +12,14 @@ class PixelToAngle(Node):
     def __init__(self):
         super().__init__("pixel_to_angle")
 
+        self.declare_parameter("bbox_topic", "/person_bbox")
+        self.declare_parameter("camera_info_topic", "/camera/camera/color/camera_info")
+        self.declare_parameter("angle_topic", "/angle/measured")
+
         # Topics
-        self.pixel_topic = "/person_center"
-        self.camera_info_topic = "/camera/color/camera_info"
-        self.angle_topic = "/target_angle"
+        self.bbox_topic = self.get_parameter("bbox_topic").value
+        self.camera_info_topic = self.get_parameter("camera_info_topic").value
+        self.angle_topic = self.get_parameter("angle_topic").value
 
         # Camera parameters
         self.fx = None
@@ -32,9 +36,9 @@ class PixelToAngle(Node):
 
         # Subscribers
         self.pixel_sub = self.create_subscription(
-            Point,
-            self.pixel_topic,
-            self.pixel_callback,
+            PersonBBox,
+            self.bbox_topic,
+            self.bbox_callback,
             10,
         )
 
@@ -47,7 +51,7 @@ class PixelToAngle(Node):
 
         # Publisher
         self.angle_pub = self.create_publisher(
-            Float64,
+            Float32,
             self.angle_topic,
             10,
         )
@@ -80,17 +84,21 @@ class PixelToAngle(Node):
 
 
 
-    # Pixel callback
-    def pixel_callback(self, msg: Point):
+    # BBox callback
+    def bbox_callback(self, msg: PersonBBox):
 
         # Wait until camera is ready
         if self.fx is None:
             return
+        
+        if not msg.valid:
+            self.get_logger().debug("Invalid BBox received, skipping")
+            return
 
-        u = msg.x
-        v = msg.y
+        u = (msg.x1 + msg.x2) / 2
+        v = (msg.y1 + msg.y2) / 2
 
-        self.get_logger().info(f"Coordinate recived: x={u} and y= {v}")
+        self.get_logger().debug(f"BBox center recived: x={u} and y= {v}")
 
         # 1. Normalize pixel
         x = (u - self.cx) / self.fx
@@ -105,11 +113,11 @@ class PixelToAngle(Node):
         # 4. Convert to degrees
         theta_deg = math.degrees(theta)
 
-        self.get_logger().info(f"Calculated angle={theta_deg}")
+        self.get_logger().debug(f"Calculated angle={theta_deg}")
 
         # 5. Publish
-        out = Float64()
-        out.data = theta_deg
+        out = Float32()
+        out.data = float(theta_deg)
         self.angle_pub.publish(out)
 
 

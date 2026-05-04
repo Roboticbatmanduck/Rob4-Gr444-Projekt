@@ -1,0 +1,49 @@
+yolo_person_center:
+  ros__parameters:
+    image_topic: "/camera/camera/color/image_raw"
+    center_topic: "/person_center"
+    model_path: "/workspace/src/follow_me/engine/best.engine"
+    confidence_threshold: 0.7
+    lost_frame_limit: 2
+
+pixel_to_angle:
+  ros__parameters:
+    pixel_topic: "/person_center"
+    camera_info_topic: "/camera/camera/color/camera_info"
+    angle_topic: "/angle/measured"
+    reference_angle: 0.0
+
+person_distance:
+  ros__parameters:
+    person_center_topic: "/person_center"
+    depth_image_topic: "/camera/camera/aligned_depth_to_color/image_raw"
+    measured_distance_topic: "/distance/measured"
+    reference_distance: 0.8
+    depth_scale: 0.001
+    search_radius: 5
+
+angle_regulator:
+  ros__parameters:
+    measured_topic: "/angle/measured"
+    output_topic: "/angular_velocity"
+    reference: 15.0
+    publish_rate: 20.0
+    kp: 1.0
+
+distance_regulator:
+  ros__parameters:
+    measured_topic: "/distance/measured"
+    output_topic: "/linear_velocity"
+    reference: 2.0
+    publish_rate: 20.0
+    kp: 0.3
+
+command_sender:
+  ros__parameters:
+    linear_topic: "/linear_velocity"
+    angular_topic: "/angular_velocity"
+    cmd_vel_topic: "/cmd_vel"
+    publish_rate: 20.0
+    timeout: 0.5
+    max_linear: 0.22
+    max_angular: 2.84
