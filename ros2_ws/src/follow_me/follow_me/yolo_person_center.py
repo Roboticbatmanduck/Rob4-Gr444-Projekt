@@ -24,9 +24,9 @@ class YoloPersonCenter(Node):
         #Declare parameters for easy yaml configuration and command line overrides. 
         self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
         self.declare_parameter("center_topic", "/person_center")
-        self.declare_parameter("model_path", "yolov8n.pt")
-        self.declare_parameter("confidence_threshold", 0.5)
-        self.declare_parameter("lost_frame_limit", 10)
+        self.declare_parameter("model_path", "best.engine")
+        self.declare_parameter("confidence_threshold", 0.7)
+        self.declare_parameter("lost_frame_limit", 2)
 
         #Get parameters
         self.image_topic = self.get_parameter("image_topic").value
