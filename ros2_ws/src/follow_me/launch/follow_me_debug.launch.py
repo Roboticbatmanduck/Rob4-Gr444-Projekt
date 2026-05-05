@@ -102,45 +102,6 @@ def generate_launch_description():
         ],
     )
 
-    angle_regulator = TimerAction(
-        period=9.0,
-        actions=[
-            Node(
-                package="follow_me",
-                executable="angle_regulator",
-                name="angle_regulator",
-                output="screen",
-                parameters=[config_file],
-            )
-        ],
-    )
-
-    distance_regulator = TimerAction(
-        period=9.0,
-        actions=[
-            Node(
-                package="follow_me",
-                executable="distance_regulator",
-                name="distance_regulator",
-                output="screen",
-                parameters=[config_file],
-            )
-        ],
-    )
-
-    command_sender = TimerAction(
-        period=10.0,
-        actions=[
-            Node(
-                package="follow_me",
-                executable="command_sender",
-                name="command_sender",
-                output="screen",
-                parameters=[config_file],
-            )
-        ],
-    )
-
     return LaunchDescription([
         config_arg,
         turtlebot3_bringup,
@@ -148,7 +109,4 @@ def generate_launch_description():
         yolo_person_center,
         person_angle,
         person_distance,
-        angle_regulator,
-        distance_regulator,
-        command_sender,
     ])
