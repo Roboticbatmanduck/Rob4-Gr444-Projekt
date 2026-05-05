@@ -45,9 +45,10 @@ def generate_launch_description():
                     "enable_depth": "true",
                     "align_depth.enable": "true",
                     "enable_sync": "true",
+                    "enable_rgbd": "true",
                 
-                    "rgb_camera.profile": "640x480x30",
-                    "depth_module.profile": "640x480x30",
+                    "rgb_camera.color_profile": "640,480,30",
+                    "depth_module.depth_profile": "640,480,30",
                 }.items()
             )
         ],
