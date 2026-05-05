@@ -1,28 +1,31 @@
 yolo_person_center:
   ros__parameters:
     image_topic: "/camera/camera/color/image_raw"
-    center_topic: "/person_center"
+    bbox_topic: "/person_bbox"
     model_path: "/workspace/src/follow_me/engine/best.engine"
     confidence_threshold: 0.7
     lost_frame_limit: 2
 
-pixel_to_angle:
+person_angle:
   ros__parameters:
-    pixel_topic: "/person_center"
+    bbox_topic: "/person_bbox"
     camera_info_topic: "/camera/camera/color/camera_info"
     angle_topic: "/angle/measured"
-    reference_angle: 0.0
 
 person_distance:
   ros__parameters:
     bbox_topic: "/person_bbox"
-    depth_image_topic: "/camera/camera/aligned_depth_to_color/image_raw"
-    measured_distance_topic: "/distance/measured"
-    reference_distance: 2.0
-    depth_scale: 0.001
-
+    depth_topic: "/camera/camera/aligned_depth_to_color/image_raw"
+    distance_topic: "/distance/measured"
+    depth_scale: 1000.0
+    histogram_bins: 64
+    min_valid_depth_m: 0.10
+    max_valid_depth_m: 5.00
+    bbox_shrink_x: 0.1
+    bbox_shrink_y: 0.1
     sync_queue_size: 10
     sync_slop: 0.05
+    foreground_margin_m: 0.20
 
 angle_regulator:
   ros__parameters:
@@ -30,7 +33,6 @@ angle_regulator:
     output_topic: "/angular_velocity"
     reference: 15.0
     publish_rate: 20.0
-    kp: 1.0
 
 distance_regulator:
   ros__parameters:
@@ -38,7 +40,6 @@ distance_regulator:
     output_topic: "/linear_velocity"
     reference: 2.0
     publish_rate: 20.0
-    kp: 0.3
 
 command_sender:
   ros__parameters:
