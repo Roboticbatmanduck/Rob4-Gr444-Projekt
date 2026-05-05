@@ -45,17 +45,10 @@ def generate_launch_description():
                     "enable_depth": "true",
                     "align_depth.enable": "true",
                     "enable_sync": "true",
-                    "enable_rgbd": "true",
                 
-                    # Resolution + FPS
-                    "color_width": "640",
-                    "color_height": "480",
-                    "color_fps": "30",
-                
-                    "depth_width": "640",
-                    "depth_height": "480",
-                    "depth_fps": "30",
-                }.items(),
+                    "rgb_camera.profile": "640x480x30",
+                    "depth_module.profile": "640x480x30",
+                }.items()
             )
         ],
     )
