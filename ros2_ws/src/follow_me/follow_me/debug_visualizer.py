@@ -82,7 +82,8 @@ class DebugVisualizer(Node):
         self.draw_bbox(frame)
         self.draw_text_info(frame)
 
-        debug_msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        debug_msg = self.bridge.cv2_to_imgmsg(rgb_frame, encoding="rgb8")
         debug_msg.header = msg.header
 
         self.debug_image_pub.publish(debug_msg)
