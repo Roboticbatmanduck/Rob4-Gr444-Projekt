@@ -89,7 +89,7 @@ class YoloPersonCenter(Node):
             self.handle_lost_target()
             return
         
-        self.publish_target(best_target)
+        self.publish_target(best_target, msg.header)
 
     def find_best_target(self, results):
         #This function takes the results from the YOLO model and finds the best target to track based on the confidence scores and proximity to the last detected center point.
@@ -157,7 +157,7 @@ class YoloPersonCenter(Node):
         if self.lost_frames >= self.lost_frame_limit:
             self.last_center = None
 
-    def publish_target(self, target):
+    def publish_target(self, target, header):
         #This function publishes the detected target as a PersonBBox message on the person_bbox topic and resets the lost frame count.
 
         (x1, y1, x2, y2, center_x, center_y, confidence) = target
@@ -167,6 +167,7 @@ class YoloPersonCenter(Node):
         self.lost_frames = 0
 
         bbox = PersonBBox()
+        bbox.header = header
         bbox.x1 = float(x1)
         bbox.y1 = float(y1)
         bbox.x2 = float(x2)

@@ -15,12 +15,14 @@ pixel_to_angle:
 
 person_distance:
   ros__parameters:
-    person_center_topic: "/person_center"
+    bbox_topic: "/person_bbox"
     depth_image_topic: "/camera/camera/aligned_depth_to_color/image_raw"
     measured_distance_topic: "/distance/measured"
-    reference_distance: 0.8
+    reference_distance: 2.0
     depth_scale: 0.001
-    search_radius: 5
+
+    sync_queue_size: 10
+    sync_slop: 0.05
 
 angle_regulator:
   ros__parameters:
