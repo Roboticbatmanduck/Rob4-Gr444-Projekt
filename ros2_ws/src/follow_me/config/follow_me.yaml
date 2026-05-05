@@ -50,3 +50,11 @@ command_sender:
     timeout: 0.5
     max_linear: 0.22
     max_angular: 2.84
+
+debug_visualizer:
+  ros__parameters:
+    image_topic: "/camera/camera/color/image_raw"
+    bbox_topic: "/person_bbox"
+    distance_topic: "/distance/measured"
+    angle_topic: "/angle/measured"
+    debug_image_topic: "/follow_me/debug_image"

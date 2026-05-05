@@ -102,6 +102,20 @@ def generate_launch_description():
         ],
     )
 
+    debug_visualizer = TimerAction(
+        period=9.0,
+        actions=[
+            Node(
+                package="follow_me",
+                executable="debug_visualizer",
+                name="debug_visualizer",
+                output="screen",
+                parameters=[config_file],
+                arguments=["--ros-args", "--log-level", "info"],
+            )
+        ],
+    )
+
     return LaunchDescription([
         config_arg,
         turtlebot3_bringup,
@@ -109,4 +123,5 @@ def generate_launch_description():
         yolo_person_center,
         person_angle,
         person_distance,
+        debug_visualizer
     ])
