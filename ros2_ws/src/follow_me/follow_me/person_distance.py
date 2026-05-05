@@ -1,116 +1,148 @@
 import rclpy
 from rclpy.node import Node
 
+
 from sensor_msgs.msg import Image
 from follow_me_interfaces.msg import PersonBBox
 from std_msgs.msg import Float32
+
 
 from cv_bridge import CvBridge
 import numpy as np
 
 
+
+
 class DistanceNode(Node):
 
-    def __init__(self):
-        super().__init__('afstand_node')
 
-        self.bridge = CvBridge()
+   def __init__(self):
+       super().__init__('afstand_node')
 
-        self.depth_image = None
-        self.target_pixel = None
 
-        self.image_width = 640
-        self.image_height = 480
+       self.bridge = CvBridge()
 
-        # Subscribers
-        self.create_subscription(
-            Image,
-            '/camera/depth/image_rect_raw',
-            self.depth_callback,
-            10
-        )
 
-        self.create_subscription(
-            Point,
-            '/target_pixel',
-            self.point_callback,
-            10
-        )
+       self.depth_image = None
+       self.target_pixel = None
 
-        # Publisher
-        self.publisher = self.create_publisher(
-            Float32,
-            '/afstand',
-            10
-        )
 
-    def depth_callback(self, msg):
-        print("DEPTH CALLBACK")
-        self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
-        self.compute_distance()
+       self.image_width = 640
+       self.image_height = 480
 
-    def point_callback(self, msg):
-        print("POINT CALLBACK")
-        self.target_pixel = (int(msg.x), int(msg.y))
-        self.compute_distance()
 
-    def mean_distance(self, cx, cy, kernel_size=3):
-        if self.depth_image is None:
-            return None
+       self.crop = None  # (x1, y1, x2, y2)
 
-        half = kernel_size // 2
-        values = []
 
-        for i in range(-half, half + 1):
-            for j in range(-half, half + 1):
+       # Subscribers
+       self.create_subscription(
+           Image,
+           '/camera/depth/image_rect_raw',
+           self.depth_callback,
+           10
+       )
 
-                x = int(np.clip(cx + i, 0, self.image_width - 1))
-                y = int(np.clip(cy + j, 0, self.image_height - 1))
 
-                d = self.depth_image[y, x]
+       self.create_subscription(
+           PersonBBox,
+           '/bbox',
+           self.bbox_callback,
+           10
+       )
 
-                # Convert if needed (RealSense often uses mm)
-                if d > 0:
-                    values.append(d)
 
-        if len(values) == 0:
-            return None
+       # Publisher
+       self.publisher = self.create_publisher(
+           Float32,
+           '/afstand',
+           10
+       )
 
-        return np.mean(values)
 
-    def compute_distance(self):
-        if self.depth_image is None or self.target_pixel is None:
-            return
 
-        u, v = self.target_pixel
 
-        dist = self.mean_distance(u, v)
+   def bbox_callback(self, msg):
+       x1, y1, x2, y2 = msg.data
 
-        if dist is None:
-            self.get_logger().warn("No valid depth")
-            return
 
-        # Convert mm → meters if needed
-        if dist > 10:  # crude check
-            dist = dist / 1000.0
+       self.crop = (
+           int(x1),
+           int(y1),
+           int(x2),
+           int(y2)
+       )
 
-        msg = Float32()
-        msg.data = float(np.round(dist, 3))
 
-        self.publisher.publish(msg)
+   def depth_callback(self, msg):
+       if self.crop is None:
+           return
 
-        self.get_logger().info(f"Distance: {msg.data:.3f} m")
+
+       range_min = 0.0
+       range_max = 5.0   
+
+
+       depth = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+       depth = np.array(depth, dtype=np.float32)
+
+
+       x1, y1, x2, y2 = self.crop
+
+
+       # Clamp to image bounds
+       h, w = depth.shape
+       x1, x2 = np.clip([x1, x2], 0, w)
+       y1, y2 = np.clip([y1, y2], 0, h)
+
+
+       roi = depth[y1:y2, x1:x2]
+
+
+       values = roi.flatten()
+       values = values[np.isfinite(values)]
+       values = values[values > 0]
+
+
+       if values.size == 0:
+           return
+
+
+       values_m = values / 1000.0
+
+
+       # the range of 0-5    
+       hist, bins = np.histogram(values_m, bins=50, range=(range_min, range_max))
+  
+
+
+       peak_index = np.argmax(hist)
+       distance = (bins[peak_index] + bins[peak_index + 1]) / 2
+
+
+       msg = Float32()
+       msg.data = float(distance)
+       self.publisher.publish(msg)
+
+
+       self.get_logger().info(f"Distance: {distance:.2f} m")
+
+
 
 
 def main(args=None):
-    rclpy.init(args=args)
+   rclpy.init(args=args)
 
-    node = DistanceNode()
-    rclpy.spin(node)
 
-    node.destroy_node()
-    rclpy.shutdown()
+   node = DistanceNode()
+   rclpy.spin(node)
+
+
+   node.destroy_node()
+   rclpy.shutdown()
+
+
 
 
 if __name__ == '__main__':
-    main()
+   main()
+
