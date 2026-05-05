@@ -31,7 +31,7 @@ class DebugVisualizer(Node):
         self.latest_distance = None
         self.latest_angle = None
 
-        self.create_subscription(follow
+        self.create_subscription(
             Image,
             self.image_topic,
             self.image_callback,
