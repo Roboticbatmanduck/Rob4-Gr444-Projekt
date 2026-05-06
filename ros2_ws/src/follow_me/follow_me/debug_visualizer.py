@@ -18,12 +18,16 @@ class DebugVisualizer(Node):
         self.declare_parameter("distance_topic", "/distance/measured")
         self.declare_parameter("angle_topic", "/angle/measured")
         self.declare_parameter("debug_image_topic", "/follow_me/debug_image")
+        self.declare_parameter("bbox_shrink_x", 0.1)
+        self.declare_parameter("bbox_shrink_y", 0.1)
 
         self.image_topic = self.get_parameter("image_topic").value
         self.bbox_topic = self.get_parameter("bbox_topic").value
         self.distance_topic = self.get_parameter("distance_topic").value
         self.angle_topic = self.get_parameter("angle_topic").value
         self.debug_image_topic = self.get_parameter("debug_image_topic").value
+        self.bbox_shrink_x = float(self.get_parameter("bbox_shrink_x").value)
+        self.bbox_shrink_y = float(self.get_parameter("bbox_shrink_y").value)
 
         self.bridge = CvBridge()
 
@@ -97,10 +101,10 @@ class DebugVisualizer(Node):
 
         height, width = frame.shape[:2]
 
-        x1 = int(max(0, min(self.latest_bbox.x1, width - 1)))
-        y1 = int(max(0, min(self.latest_bbox.y1, height - 1)))
-        x2 = int(max(0, min(self.latest_bbox.x2, width - 1)))
-        y2 = int(max(0, min(self.latest_bbox.y2, height - 1)))
+        x1 = int(max(0, min(self.latest_bbox.x1, width)))
+        y1 = int(max(0, min(self.latest_bbox.y1, height)))
+        x2 = int(max(0, min(self.latest_bbox.x2, width)))
+        y2 = int(max(0, min(self.latest_bbox.y2, height)))
 
         cv2.rectangle(
             frame,
@@ -108,6 +112,37 @@ class DebugVisualizer(Node):
             (x2, y2),
             (0, 255, 0),
             2,
+        )
+
+        box_w = x2 - x1
+        box_h = y2 - y1
+
+        sx = self.bbox_shrink_x
+        sy = self.bbox_shrink_y
+
+        inner_x1 = int(x1 + sx * box_w)
+        inner_x2 = int(x2 - sx * box_w)
+        inner_y1 = int(y1 + sy * box_h)
+        inner_y2 = int(y2 - sy * box_h)
+
+        cv2.rectangle(
+            frame,
+            (inner_x1, inner_y1),
+            (inner_x2, inner_y2),
+            (255, 0, 0),
+            2,
+        )
+
+        # Center point of bounding box
+        center_x = int((x1 + x2) / 2)
+        center_y = int((y1 + y2) / 2)
+
+        cv2.circle(
+            frame,
+            (center_x, center_y),
+            4,
+            (0, 0, 255),
+            -1,
         )
 
         confidence_text = f"conf: {self.latest_bbox.confidence:.2f}"

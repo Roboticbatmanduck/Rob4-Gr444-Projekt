@@ -86,10 +86,10 @@ class YoloPersonCenter(Node):
         # This is to prevent the publishsing of old data and to make subsequent control code easier, as it can just check if no data is recieved for a certain amount of time to know that the target is lost
         # This also handles if the target is lost completely allowing for a new detection to be selected based on confidence scores rather than proximity.
         if best_target is None:
-            self.handle_lost_target()
+            self.handle_lost_target(msg.header)
             return
         
-        self.publish_target(best_target, msg.header)
+        self.publish_valid_target(best_target, msg.header)
 
     def find_best_target(self, results):
         #This function takes the results from the YOLO model and finds the best target to track based on the confidence scores and proximity to the last detected center point.
@@ -146,18 +146,31 @@ class YoloPersonCenter(Node):
 
         #compute the Euclidean distance using the Pythagorean theorem and return (**0.5 is equivalent to the square root)
         return (dx * dx + dy * dy) ** 0.5
-    
-    def handle_lost_target(self):
-        #This function is called when no valid person is detected in the current frame
-        #it counts the amount of consecutive frames where no valid target is detected
-        # if the amount of lost frames exceeds the specified limit, the last center is reset to None, allowing the next detection to be selected based on confidence scores rather than proximity. 
-
+   
+    def handle_lost_target(self, header):
+        # Count one more frame where no valid person was detected.
         self.lost_frames += 1
 
+        # If the target has been missing for too many frames,
+        # forget the old target and publish an invalid bbox.
         if self.lost_frames >= self.lost_frame_limit:
             self.last_center = None
+            self.publish_invalid_target(header)
 
-    def publish_target(self, target, header):
+    def publish_invalid_target(self, header):
+        bbox = PersonBBox()
+        bbox.header = header
+
+        bbox.x1 = 0.0
+        bbox.y1 = 0.0
+        bbox.x2 = 0.0
+        bbox.y2 = 0.0
+        bbox.confidence = 0.0
+        bbox.valid = False
+
+        self.pub.publish(bbox)
+
+    def publish_valid_target(self, target, header):
         #This function publishes the detected target as a PersonBBox message on the person_bbox topic and resets the lost frame count.
 
         (x1, y1, x2, y2, center_x, center_y, confidence) = target

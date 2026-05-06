@@ -1,0 +1,71 @@
+person_center_pc:
+  ros__parameters:
+    image_topic: "/camera/camera/image_raw"
+    bbox_topic: "/person_bbox"
+    model_path: "yolov8n.pt"
+    confidence_threshold: 0.7
+    lost_frame_limit: 2
+
+person_angle:
+  ros__parameters:
+    bbox_topic: "/person_bbox"
+    camera_info_topic: "/camera/camera/camera_info"
+    angle_topic: "/angle/measured"
+
+person_distance:
+  ros__parameters:
+    bbox_topic: "/person_bbox"
+    depth_topic: "/camera/camera/depth/image_raw"
+    distance_topic: "/distance/measured"
+    depth_scale: 1.0
+    histogram_bins: 64
+    min_valid_depth_m: 0.10
+    max_valid_depth_m: 5.00
+    bbox_shrink_x: 0.1
+    bbox_shrink_y: 0.1
+    sync_queue_size: 10
+    sync_slop: 0.05
+    foreground_margin_m: 0.20
+
+angle_regulator:
+  ros__parameters:
+    measured_topic: "/angle/measured"
+    output_topic: "/angular_velocity"
+    reference: 15.0
+    publish_rate: 20.0
+
+distance_regulator:
+  ros__parameters:
+    measured_topic: "/distance/measured"
+    output_topic: "/linear_velocity"
+    reference: 2.0
+    publish_rate: 20.0
+
+command_sender:
+  ros__parameters:
+    linear_topic: "/linear_velocity"
+    angular_topic: "/angular_velocity"
+    cmd_vel_topic: "/cmd_vel"
+    publish_rate: 20.0
+    timeout: 0.5
+    max_linear: 0.22
+    max_angular: 2.84
+
+debug_visualizer:
+  ros__parameters:
+    image_topic: "/camera/camera/image_raw"
+    bbox_topic: "/person_bbox"
+    distance_topic: "/distance/measured"
+    angle_topic: "/angle/measured"
+    debug_image_topic: "/follow_me/debug_image"
+
+simple_follower:
+  ros__parameters:
+    distance_topic: "/distance/measured"
+    angle_topic: "/angle/measured"
+    cmd_vel_topic: "/cmd_vel"
+    target_distance: 1.5
+    max_linear: 0.2
+    max_angular: 0.2
+    linear_gain: 0.5
+    angular_gain: 1.0

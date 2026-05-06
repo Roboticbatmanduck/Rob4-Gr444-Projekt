@@ -1,10 +1,9 @@
 import rclpy
 from rclpy.node import Node
 
-from geometry_msgs.msg import Twist, Point
-from sensor_msgs.msg import Image, CameraInfo
+from geometry_msgs.msg import Twist
+from std_msgs.msg import Float32
 
-from cv_bridge import CvBridge
 import numpy as np
 import math
 
@@ -13,115 +12,112 @@ class SimpleFollower(Node):
     def __init__(self):
         super().__init__("simple_follower")
 
-        # --- PARAMETERS ---
-        self.target_distance = 1.5
-        self.max_linear = 0.2
-        self.max_angular = 0.2
+        # Parameters
+        self.declare_parameter("distance_topic", "/distance/measured")
+        self.declare_parameter("angle_topic", "/angle/measured")
+        self.declare_parameter("cmd_vel_topic", "/cmd_vel")
 
-        # Camera intrinsics
-        self.fx = None
-        self.cx = None
+        self.declare_parameter("target_distance", 1.5)
+        self.declare_parameter("max_linear", 0.2)
+        self.declare_parameter("max_angular", 0.2)
 
-        # State
-        self.center = None
-        self.depth_image = None
+        self.declare_parameter("linear_gain", 0.5)
+        self.declare_parameter("angular_gain", 1.0)
 
-        self.bridge = CvBridge()
+        self.distance_topic = self.get_parameter("distance_topic").value
+        self.angle_topic = self.get_parameter("angle_topic").value
+        self.cmd_vel_topic = self.get_parameter("cmd_vel_topic").value
 
-        # --- SUBSCRIBERS ---
-        self.create_subscription(Point, "/person_center", self.center_callback, 10)
-        self.create_subscription(Image, "/camera/camera/depth/image_raw", self.depth_callback, 10)
-        self.create_subscription(CameraInfo, "/camera/camera/camera_info", self.info_callback, 10)
+        self.target_distance = float(self.get_parameter("target_distance").value)
+        self.max_linear = float(self.get_parameter("max_linear").value)
+        self.max_angular = float(self.get_parameter("max_angular").value)
 
-        # --- PUBLISHER ---
-        self.cmd_pub = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.linear_gain = float(self.get_parameter("linear_gain").value)
+        self.angular_gain = float(self.get_parameter("angular_gain").value)
 
-        # --- TIMER ---
-        self.create_timer(0.05, self.control_loop)  # 20 Hz
+        self.latest_distance = None
+        self.latest_angle = None
+        self.last_msg_time = self.get_clock().now()
 
-        self.get_logger().info("Simple follower started")
+        self.timeout = 0.5
 
-    # --- CALLBACKS ---
-    def center_callback(self, msg):
-        self.center = (int(msg.x), int(msg.y))
+        self.create_subscription(
+            Float32,
+            self.distance_topic,
+            self.distance_callback,
+            10,
+        )
 
-    def depth_callback(self, msg):
-        self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+        self.create_subscription(
+            Float32,
+            self.angle_topic,
+            self.angle_callback,
+            10,
+        )
 
-        # Print encoding once
-        if not hasattr(self, "printed_encoding"):
-            self.get_logger().info(f"Depth encoding: {msg.encoding}")
-            self.printed_encoding = True
+        self.cmd_pub = self.create_publisher(
+            Twist,
+            self.cmd_vel_topic,
+            10,
+        )
 
-    def info_callback(self, msg):
-        if self.fx is None:
-            self.fx = msg.k[0]
-            self.cx = msg.k[2]
-            self.get_logger().info("Camera intrinsics received")
+        self.create_timer(0.05, self.control_loop)
 
-    # --- MAIN CONTROL LOOP ---
+        self.get_logger().info(
+            f"Simple follower started. Subscribed to {self.distance_topic} and {self.angle_topic}"
+        )
+
+    def distance_callback(self, msg):
+        self.latest_distance = float(msg.data)
+        self.last_msg_time = self.get_clock().now()
+
+    def angle_callback(self, msg):
+        self.latest_angle = float(msg.data)
+        self.last_msg_time = self.get_clock().now()
+
     def control_loop(self):
-        if self.center is None or self.depth_image is None or self.fx is None:
+        now = self.get_clock().now()
+        dt = (now - self.last_msg_time).nanoseconds * 1e-9
+
+        if self.latest_distance is None or self.latest_angle is None or dt > self.timeout:
+            self.publish_stop()
             return
 
-        u, v = self.center
+        distance = self.latest_distance
+        angle = self.latest_angle
 
-        h, w = self.depth_image.shape
+        # If angle node publishes degrees, convert to radians.
+        # If it already publishes radians, delete these two lines.
+        if abs(angle) > math.pi:
+            angle = math.radians(angle)
 
-        # Avoid out-of-bounds
-        if v < 2 or v > h - 3 or u < 2 or u > w - 3:
-            return
+        distance_error = distance - self.target_distance
 
-        # --- ROBUST DEPTH (5x5 region) ---
-        region = self.depth_image[v-2:v+3, u-2:u+3]
+        linear = self.linear_gain * distance_error
+        angular = self.angular_gain * angle
 
-        # Remove invalid values
-        region = region[np.isfinite(region)]
+        linear = float(np.clip(linear, -self.max_linear, self.max_linear))
+        angular = float(np.clip(angular, -self.max_angular, self.max_angular))
 
-        if len(region) == 0:
-            return
+        # Slow forward motion while turning
+        linear *= max(0.0, math.cos(angle))
 
-        depth = np.median(region)
-
-        # --- HANDLE ENCODING ---
-        if self.depth_image.dtype == np.uint16:
-            depth = float(depth) / 1000.0  # mm → meters
-        else:
-            depth = float(depth)  # already meters
-
-        # Ignore bad depth
-        if depth <= 0.1 or depth > 10.0:
-            return
-
-        # --- ANGLE ---
-        x = (u - self.cx) / self.fx
-        angle = math.atan(x)  # radians
-
-        # --- CONTROL ---
-        dist_error = depth - self.target_distance
-
-        # Simple proportional control
-        linear = dist_error * 0.5
-        angular = angle * 1.0
-
-        # --- LIMITS ---
-        linear = np.clip(linear, -self.max_linear, self.max_linear)
-        angular = np.clip(angular, -self.max_angular, self.max_angular)
-
-        # --- COUPLING ---
-        linear = linear * math.cos(angle)
-
-        # --- COMMAND ---
         cmd = Twist()
-        cmd.linear.x = float(linear)
-        cmd.angular.z = float(-angular)  # flip sign if needed
+        cmd.linear.x = linear
+        cmd.angular.z = -angular  # flip sign if turning wrong way
 
         self.cmd_pub.publish(cmd)
 
         self.get_logger().info(
-            f"dist={depth:.2f}m angle={math.degrees(angle):.1f}deg "
-            f"lin={linear:.2f} ang={angular:.2f}"
+            f"distance={distance:.2f}m angle={math.degrees(angle):.1f}deg "
+            f"linear={cmd.linear.x:.2f} angular={cmd.angular.z:.2f}"
         )
+
+    def publish_stop(self):
+        cmd = Twist()
+        cmd.linear.x = 0.0
+        cmd.angular.z = 0.0
+        self.cmd_pub.publish(cmd)
 
 
 def main(args=None):
@@ -130,3 +126,7 @@ def main(args=None):
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
