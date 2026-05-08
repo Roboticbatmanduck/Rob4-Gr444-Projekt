@@ -16,7 +16,9 @@ person_distance:
   ros__parameters:
     bbox_topic: "/person_bbox"
     depth_topic: "/camera/camera/depth/image_raw"
+    camera_info_topic: "/camera/camera/camera_info"
     distance_topic: "/distance/measured"
+    point_topic: "/distance/point"
     depth_scale: 1.0
     histogram_bins: 64
     min_valid_depth_m: 0.10
