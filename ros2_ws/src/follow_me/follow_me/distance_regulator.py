@@ -14,15 +14,25 @@ class DistanceRegulator (Node):
         self.declare_parameter("measured_topic", "/distance/measured")
         self.declare_parameter("output_topic", "/linear_velocity")
         self.declare_parameter("publish_rate", 20.0)
+        self.declare_parameter("kp",1)
+        self.declare_parameter("ki",0)
+        self.declare_parameter("kd",0)
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
         self.measured_topic = self.get_parameter("measured_topic").value
         self.output_topic = self.get_parameter("output_topic").value
         self.publish_rate = float(self.get_parameter("publish_rate").value)
+        self.kp = float(self.get_parameter("kp").value)
+        self.ki = float(self.get_parameter("ki").value)
+        self.kd = float(self.get_parameter("kd").value)
 
         self.measured = self.reference #Initialize the measured distance to the reference to avoid large initial error
-
+        self.error = 0
+        self.error_prev = 0
+        self.error_old = 0
+        self.u = 0
+        self.u_prev = 0
         #Subscriber for the measured distance
         self.create_subscription(
             Float32,
@@ -39,8 +49,8 @@ class DistanceRegulator (Node):
         )
 
         #Timer that runs the control loop at 20 Hz
-        period = 1.0 / self.publish_rate
-        self.timer = self.create_timer(period, self.compute_and_publish)
+        self.period = 1.0 / self.publish_rate
+        self.timer = self.create_timer(self.period, self.compute_and_publish)
 
         #Log that the node has startet succesfully
         self.get_logger().info('Distance regulator started')
@@ -52,10 +62,10 @@ class DistanceRegulator (Node):
     def compute_and_publish(self):
         """Computes the control error and publishes the control signal."""
         #Calculate the control error
-        error = self.measured - self.reference
+        self.error = self.reference - self.measured
 
         #Compute control signal using the regulator
-        control_signal = self.compute_control(error)
+        control_signal = self.compute_control()
 
         #Publiosh the control singal as linear velocity
         msg = Float32()
@@ -63,10 +73,17 @@ class DistanceRegulator (Node):
         
         self.control_publisher.publish(msg)
 
-    def compute_control(self, error):
+    def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
-
-        return error #midlertidig "P" regulator
+        T = self.period
+        P = self.kp*(self.error-self.error_prev)
+        I = self.ki*self.error*T
+        D = self.kd*(self.error-2*self.error_prev+self.error_old)/T
+        self.u = self.u_prev + P+I+D
+        self.error_old = self.error_prev
+        self.error_prev = self.error
+        self.u_prev = self.u
+        return self.u 
     
 def main(args=None):
     """Main function that initializes ROS2 and starts the node"""
