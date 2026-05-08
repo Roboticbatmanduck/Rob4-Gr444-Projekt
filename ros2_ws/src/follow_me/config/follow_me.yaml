@@ -31,6 +31,8 @@ angle_regulator:
   ros__parameters:
     measured_topic: "/angle/measured"
     output_topic: "/angular_velocity"
+    min: -2.84
+    max: 2.84
     kp: 1
     ki: 0
     kd: 0
@@ -41,6 +43,8 @@ distance_regulator:
   ros__parameters:
     measured_topic: "/distance/measured"
     output_topic: "/linear_velocity"
+    min: 0
+    max: 0.22
     kp: 1
     ki: 0
     kd: 0
