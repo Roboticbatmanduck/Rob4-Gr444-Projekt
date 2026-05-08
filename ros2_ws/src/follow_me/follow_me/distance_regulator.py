@@ -33,6 +33,7 @@ class DistanceRegulator (Node):
         self.error_old = 0
         self.u = 0
         self.u_prev = 0
+
         #Subscriber for the measured distance
         self.create_subscription(
             Float32,
@@ -61,6 +62,7 @@ class DistanceRegulator (Node):
     
     def compute_and_publish(self):
         """Computes the control error and publishes the control signal."""
+        
         #Calculate the control error
         self.error = self.reference - self.measured
 
