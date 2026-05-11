@@ -99,7 +99,7 @@ class YoloPersonCenter(Node):
         detected = Bool()
         detected.data = True
         self.publish_valid_target(best_target, msg.header)
-        self.detect_publisher(detected)
+        self.detect_publisher.publish(detected)
 
     def find_best_target(self, results):
         #This function takes the results from the YOLO model and finds the best target to track based on the confidence scores and proximity to the last detected center point.
@@ -168,7 +168,7 @@ class YoloPersonCenter(Node):
             not_detected = Bool()
             not_detected.data = False
             self.publish_invalid_target(header)
-            self.detect_publisher(not_detected)
+            self.detect_publisher.publish(not_detected)
 
     def publish_invalid_target(self, header):
         bbox = PersonBBox()
