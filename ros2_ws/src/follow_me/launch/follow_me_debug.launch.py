@@ -110,18 +110,18 @@ def generate_launch_description():
         ],
     )
 
-    angle_regulator = TimerAction(
-        period=9.0,
-        actions=[
-            Node(
-                package="follow_me",
-                executable="angle_regulator",
-                name="angle_regulator",
-                output="screen",
-                parameters=[config_file],
-            )
-        ],
-    )
+    # angle_regulator = TimerAction(
+    #     period=9.0,
+    #     actions=[
+    #         Node(
+    #             package="follow_me",
+    #             executable="angle_regulator",
+    #             name="angle_regulator",
+    #             output="screen",
+    #             parameters=[config_file],
+    #         )
+    #     ],
+    # )
 
     distance_regulator = TimerAction(
         period=9.0,
