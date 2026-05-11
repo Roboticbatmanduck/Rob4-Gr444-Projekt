@@ -22,9 +22,6 @@ class AngleRegulator (Node):
         self.declare_parameter("kd",0.0)
         self.declare_parameter("min",-2.84)
         self.declare_parameter("max",2.84)
-        self.declare_parameter("kp",1)
-        self.declare_parameter("ki",0)
-        self.declare_parameter("kd",0)
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
@@ -38,11 +35,11 @@ class AngleRegulator (Node):
         self.kd = float(self.get_parameter("kd").value)
 
         self.measured = self.reference # Initialize measured angle to reference to avoid large initial error
-        self.error = 0
-        self.error_prev = 0
-        self.error_old = 0
-        self.u = 0
-        self.u_prev = 0
+        self.error = 0.0
+        self.error_prev = 0.0
+        self.error_old = 0.0
+        self.u = 0.0
+        self.u_prev = 0.0
 
         #Subscriber for the measured angle
         self.create_subscription(

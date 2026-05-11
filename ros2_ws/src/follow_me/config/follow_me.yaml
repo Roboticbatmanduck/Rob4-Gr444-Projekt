@@ -43,9 +43,9 @@ distance_regulator:
   ros__parameters:
     measured_topic: "/distance/measured"
     output_topic: "/linear_velocity"
-    min: 0
+    min: 0.0
     max: 0.22
-    kp: 4
+    kp: 4.0
     ki: 1.4
     kd: 0.6
     reference: 1.85

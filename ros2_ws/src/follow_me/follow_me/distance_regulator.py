@@ -33,11 +33,11 @@ class DistanceRegulator (Node):
         self.kd = float(self.get_parameter("kd").value)
 
         self.measured = self.reference #Initialize the measured distance to the reference to avoid large initial error
-        self.error = 0
-        self.error_prev = 0
-        self.error_old = 0
-        self.u = 0
-        self.u_prev = 0
+        self.error = 0.0
+        self.error_prev = 0.0
+        self.error_old = 0.0
+        self.u = 0.0
+        self.u_prev = 0.0
         #Subscriber for the measured distance
         self.create_subscription(
             Float32,
