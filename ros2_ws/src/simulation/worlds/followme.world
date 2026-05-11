@@ -1,0 +1,66 @@
+<sdf version="1.6">
+  <world name="default">
+
+    <!-- Ground -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Light -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- HUMAN ACTOR -->
+    <actor name="walking_person">
+      <pose>2 0 0 0 0 0</pose>
+
+      <skin>
+        <filename>/usr/share/gazebo-11/media/models/walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+
+      <animation name="walk">
+        <filename>/usr/share/gazebo-11/media/models/walk.dae</filename>
+        <scale>1.0</scale>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+
+      <script>
+        <loop>true</loop>
+        <delay_start>0.0</delay_start>
+        <auto_start>true</auto_start>
+
+        <!-- SIMPLE CIRCLE -->
+        <trajectory id="0" type="walk">
+
+        <!-- Right straight section, going upward -->
+        <waypoint><time>0</time><pose>2.0 -1.5 0 0 0 1.57</pose></waypoint>
+        <waypoint><time>15</time><pose>2.0 0.0 0 0 0 1.57</pose></waypoint>
+        <waypoint><time>30</time><pose>2.0 1.5 0 0 0 1.57</pose></waypoint>
+
+        <!-- Rounded top end -->
+        <waypoint><time>35</time><pose>1.4 2.1 0 0 0 2.35</pose></waypoint>
+        <waypoint><time>40</time><pose>0.0 2.3 0 0 0 3.14</pose></waypoint>
+        <waypoint><time>45</time><pose>-1.4 2.1 0 0 0 -2.35</pose></waypoint>
+
+        <!-- Left straight section, going downward -->
+        <waypoint><time>50</time><pose>-2.0 1.5 0 0 0 -1.57</pose></waypoint>
+        <waypoint><time>65</time><pose>-2.0 0.0 0 0 0 -1.57</pose></waypoint>
+        <waypoint><time>80</time><pose>-2.0 -1.5 0 0 0 -1.57</pose></waypoint>
+
+        <!-- Rounded bottom end -->
+        <waypoint><time>85</time><pose>-1.4 -2.1 0 0 0 -0.78</pose></waypoint>
+        <waypoint><time>90</time><pose>0.0 -2.3 0 0 0 0.0</pose></waypoint>
+        <waypoint><time>95</time><pose>1.4 -2.1 0 0 0 0.78</pose></waypoint>
+
+        <!-- Back to start -->
+        <waypoint><time>100</time><pose>2.0 -1.5 0 0 0 1.57</pose></waypoint>
+
+        </trajectory>
+
+      </script>
+    </actor>
+
+  </world>
+</sdf>
