@@ -33,9 +33,9 @@ angle_regulator:
     output_topic: "/angular_velocity"
     min: -2.84
     max: 2.84
-    kp: 1
-    ki: 0
-    kd: 0
+    kp: 2.4
+    ki: 0.6
+    kd: 0.4
     reference: 15.0
     publish_rate: 20.0
 
@@ -45,9 +45,9 @@ distance_regulator:
     output_topic: "/linear_velocity"
     min: 0
     max: 0.22
-    kp: 1
-    ki: 0
-    kd: 0
+    kp: 4
+    ki: 1.4
+    kd: 0.6
     reference: 1.85
     publish_rate: 20.0
 
