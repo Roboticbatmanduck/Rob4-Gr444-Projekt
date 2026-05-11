@@ -110,16 +110,17 @@ class PixelToAngle(Node):
 
         # 3. Angle (radians)
         theta = math.atan(x_u)
+        theta = np.round(theta,3)
 
         # 4. Convert to degrees
         theta_deg = math.degrees(theta)
         theta_deg = np.round(theta_deg,3)
 
-        self.get_logger().debug(f"Calculated angle={theta_deg}")
+        self.get_logger().debug(f"Calculated angle is {theta_deg} in degrees and {theta} in radians")
 
         # 5. Publish
         out = Float32()
-        out.data = float(theta_deg)
+        out.data = float(theta)
         self.angle_pub.publish(out)
 
 

@@ -36,7 +36,7 @@ angle_regulator:
     kp: 2.4
     ki: 0.6
     kd: 0.4
-    reference: 15.0
+    reference: -0.2618
     publish_rate: 20.0
 
 distance_regulator:

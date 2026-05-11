@@ -13,7 +13,7 @@ class AngleRegulator (Node):
     def __init__(self):
         super().__init__('angle_regulator')
 
-        self.declare_parameter("reference", 15.0)
+        self.declare_parameter("reference", -0.2618) # The reference is 15 degrees
         self.declare_parameter("measured_topic", "/angle/measured")
         self.declare_parameter("output_topic", "/angular_velocity")
         self.declare_parameter("publish_rate", 20.0)
