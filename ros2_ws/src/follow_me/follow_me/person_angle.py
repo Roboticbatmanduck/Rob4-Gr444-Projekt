@@ -71,7 +71,7 @@ class PixelToAngle(Node):
         self.cx = msg.k[2]
         self.cy = msg.k[5]
 
-        # Distortion (robust parsing)
+        # Distortion
         d = msg.d
 
         self.k1 = d[0] if len(d) > 0 else 0.0
