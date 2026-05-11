@@ -26,7 +26,7 @@ class YoloPersonCenter(Node):
         self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
         self.declare_parameter("bbox_topic", "/person_bbox")
         self.declare_parameter("model_path", "/workspace/src/follow_me/engine/best.engine")
-        self.declare_parameter("detect_topic, /detect")
+        self.declare_parameter("detect_topic", "/detect")
         self.declare_parameter("confidence_threshold", 0.7)
         self.declare_parameter("lost_frame_limit", 2)
 
