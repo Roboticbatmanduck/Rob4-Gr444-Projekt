@@ -57,8 +57,8 @@ class AngleRegulator (Node):
         )
 
         #Timer that runs the control loop at 20 Hz
-        period = 1.0 / self.publish_rate
-        self.timer = self.create_timer(period, self.compute_and_publish)
+        self.period = 1.0 / self.publish_rate
+        self.timer = self.create_timer(self.period, self.compute_and_publish)
 
         #Log that the node has startet succesfully
         self.get_logger().info('Angle regulator started')
