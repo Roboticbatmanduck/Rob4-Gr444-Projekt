@@ -36,12 +36,12 @@ def generate_launch_description():
                 'followme.world'
             ),
             'gui': 'false',
-            'extra_gazebo_args': '-s libgazebo_ros_factory.so',
+            'extra_gazebo_args': '--verbose  -s libgazebo_ros_factory.so',
         }.items()
     )
 
     spawn_robot_delayed = TimerAction(
-        period=15.0,
+        period=5.0,
         actions=[
             Node(
                 package='gazebo_ros',
@@ -60,7 +60,7 @@ def generate_launch_description():
     )
 
     start_rqt_image_view = TimerAction(
-        period=20.0,
+        period=5.0,
         actions=[
             Node(
                 package='rqt_image_view',
@@ -71,7 +71,7 @@ def generate_launch_description():
     )
 
     yolo_node = TimerAction(
-        period=22.0,
+        period=6.0,
         actions=[
             Node(
                 package='follow_me',
@@ -84,7 +84,7 @@ def generate_launch_description():
     )
 
     person_distance_node = TimerAction(
-        period=23.0,
+        period=7.0,
         actions=[
             Node(
                 package='follow_me',
@@ -97,7 +97,7 @@ def generate_launch_description():
     )
 
     person_angle_node = TimerAction(
-        period=23.0,
+        period=7.0,
         actions=[
             Node(
                 package='follow_me',
@@ -110,7 +110,7 @@ def generate_launch_description():
     )
 
     debug_visualizer_node = TimerAction(
-        period=24.0,
+        period=8.0,
         actions=[
             Node(
                 package='follow_me',
@@ -122,18 +122,46 @@ def generate_launch_description():
         ]
     )
 
-    follower_node = TimerAction(
-        period=25.0,
+    angle_regulator = TimerAction(
+        period=9.0,
         actions=[
             Node(
-                package='follow_me',
-                executable='simple_follower',
-                name='simple_follower',
+                package="follow_me",
+                executable="angle_regulator",
+                name="angle_regulator",
+                output="screen",
                 parameters=[config_file],
-                output='screen',
             )
-        ]
+        ],
     )
+
+    distance_regulator = TimerAction(
+        period=9.0,
+        actions=[
+            Node(
+                package="follow_me",
+                executable="distance_regulator",
+                name="distance_regulator",
+                output="screen",
+                parameters=[config_file],
+            )
+        ],
+    )
+
+    command_sender = TimerAction(
+        period=10.0,
+        actions=[
+            Node(
+                package="follow_me",
+                executable="command_sender",
+                name="command_sender",
+                output="screen",
+                parameters=[config_file],
+            )
+        ],
+    )
+
+
 
     return LaunchDescription([
         SetEnvironmentVariable(
@@ -147,5 +175,8 @@ def generate_launch_description():
         person_distance_node,
         person_angle_node,
         debug_visualizer_node,
-        follower_node,
+        angle_regulator,
+        distance_regulator,
+        command_sender
+        ,
     ])

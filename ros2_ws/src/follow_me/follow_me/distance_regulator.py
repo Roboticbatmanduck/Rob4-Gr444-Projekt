@@ -21,6 +21,7 @@ class DistanceRegulator (Node):
         self.declare_parameter("kp",1.0)
         self.declare_parameter("ki",0.0)
         self.declare_parameter("kd",0.0)
+        self.declare_parameter("deadband", 0.01)
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
@@ -34,6 +35,7 @@ class DistanceRegulator (Node):
         self.kp = float(self.get_parameter("kp").value)
         self.ki = float(self.get_parameter("ki").value)
         self.kd = float(self.get_parameter("kd").value)
+        self.deadband = float(self.get_parameter("deadband").value)
 
         self.measured = self.reference #Initialize the measured distance to the reference to avoid large initial error
         self.error = 0.0
@@ -90,14 +92,6 @@ class DistanceRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
-
-        if self.error < 0:
-            self.u = 0.0
-            self.u_prev = 0.0
-            self.error_prev = 0.0
-            self.error_old = 0.0
-            return self.u
-
         T = self.period
         P = self.kp*(self.error-self.error_prev)
         I = self.ki*self.error*T
@@ -107,7 +101,7 @@ class DistanceRegulator (Node):
         self.error_old = self.error_prev
         self.error_prev = self.error
         self.u_prev = self.u
-        if self.u < 0.01:
+        if self.u < self.deadband:
             self.u = 0.0
         return self.u 
     
