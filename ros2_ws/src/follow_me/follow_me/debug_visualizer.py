@@ -102,9 +102,17 @@ class DebugVisualizer(Node):
 
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         debug_msg = self.bridge.cv2_to_imgmsg(rgb_frame, encoding="rgb8")
-        debug_msg.header = msg.header
+        comp_msg = CompressedImage()
+        comp_msg.header = msg.header
+        comp_msg.format = "jpeg"
 
-        self.debug_image_pub.publish(debug_msg)
+        success, encoded = cv2.imencode(".jpg", frame)
+        if not success:
+            return
+
+        comp_msg.data = encoded.tobytes()
+
+        self.debug_image_pub.publish(comp_msg)
 
     def distance_point_callback(self, msg):
         self.latest_distance_point = msg
