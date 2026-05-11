@@ -59,17 +59,6 @@ def generate_launch_description():
         ]
     )
 
-    start_rqt_image_view = TimerAction(
-        period=5.0,
-        actions=[
-            Node(
-                package='rqt_image_view',
-                executable='rqt_image_view',
-                output='screen'
-            )
-        ]
-    )
-
     yolo_node = TimerAction(
         period=6.0,
         actions=[
@@ -161,6 +150,17 @@ def generate_launch_description():
         ],
     )
 
+    start_rqt_image_view = TimerAction(
+        period=15.0,
+        actions=[
+            Node(
+                package='rqt_image_view',
+                executable='rqt_image_view',
+                output='screen'
+            )
+        ]
+    )
+
 
 
     return LaunchDescription([
@@ -168,6 +168,19 @@ def generate_launch_description():
             name='GAZEBO_MODEL_PATH',
             value=os.path.join(simulation_dir, 'models')
         ),
+        SetEnvironmentVariable(
+        name='FASTRTPS_DEFAULT_PROFILES_FILE',
+        value=''
+        ),
+        SetEnvironmentVariable(
+            name='RMW_FASTRTPS_USE_QOS_FROM_XML',
+            value='0'
+        ),
+        SetEnvironmentVariable(
+            name='ROS_DISABLE_SHM',
+            value='1'
+        ),
+
         start_followme_world,
         spawn_robot_delayed,
         start_rqt_image_view,
@@ -179,4 +192,5 @@ def generate_launch_description():
         distance_regulator,
         command_sender
         ,
-    ])
+    ]
+    )

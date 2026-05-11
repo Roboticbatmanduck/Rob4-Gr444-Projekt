@@ -59,7 +59,7 @@ debug_visualizer:
     bbox_topic: "/person_bbox"
     distance_topic: "/distance/measured"
     angle_topic: "/angle/measured"
-    debug_image_topic: "/follow_me/debug_image"
+    debug_image_topic: "/follow_me/debug/compressed"
 
 simple_follower:
   ros__parameters:

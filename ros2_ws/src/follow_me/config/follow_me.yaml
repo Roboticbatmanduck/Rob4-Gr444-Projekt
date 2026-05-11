@@ -67,6 +67,6 @@ debug_visualizer:
     bbox_topic: "/person_bbox"
     distance_topic: "/distance/measured"
     angle_topic: "/angle/measured"
-    debug_image_topic: "/follow_me/debug_image"
+    debug_image_topic: "/follow_me/debug/compressed"
     bbox_shrink_x: 0.1
     bbox_shrink_y: 0.1

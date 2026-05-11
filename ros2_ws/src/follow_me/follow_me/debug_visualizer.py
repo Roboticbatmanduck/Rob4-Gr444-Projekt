@@ -18,7 +18,7 @@ class DebugVisualizer(Node):
         self.declare_parameter("bbox_topic", "/person_bbox")
         self.declare_parameter("distance_topic", "/distance/measured")
         self.declare_parameter("angle_topic", "/angle/measured")
-        self.declare_parameter("debug_image_topic", "/follow_me/debug_image")
+        self.declare_parameter("debug_image_topic", "/follow_me/debug/compressed")
         self.declare_parameter("distance_point_topic", "/distance/point")
         
         self.declare_parameter("bbox_shrink_x", 0.1)
