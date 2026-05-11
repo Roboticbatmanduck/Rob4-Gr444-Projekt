@@ -122,18 +122,55 @@ def generate_launch_description():
         ]
     )
 
-    follower_node = TimerAction(
+    distance_regulator = TimerAction(
         period=25.0,
         actions=[
             Node(
                 package='follow_me',
-                executable='simple_follower',
-                name='simple_follower',
+                executable='distance_regulator',
+                name='distance_regulator',
                 parameters=[config_file],
                 output='screen',
             )
         ]
     )
+    angle_regulator = TimerAction(
+        period=25.0,
+        actions=[
+            Node(
+                package='follow_me',
+                executable='angle_regulator',
+                name='angle_regulator',
+                parameters=[config_file],
+                output='screen',
+            )
+        ]
+    )
+    command_sender = TimerAction(
+        period=26.0,
+        actions=[
+            Node(
+                package='follow_me',
+                executable='command_sender',
+                name='command_sender',
+                parameters=[config_file],
+                output='screen',
+            )
+        ]
+    )
+
+    # follower_node = TimerAction(
+    #     period=25.0,
+    #     actions=[
+    #         Node(
+    #             package='follow_me',
+    #             executable='simple_follower',
+    #             name='simple_follower',
+    #             parameters=[config_file],
+    #             output='screen',
+    #         )
+    #     ]
+    # )
 
     return LaunchDescription([
         SetEnvironmentVariable(
@@ -147,5 +184,7 @@ def generate_launch_description():
         person_distance_node,
         person_angle_node,
         debug_visualizer_node,
-        follower_node,
+        command_sender,
+        distance_regulator,
+        angle_regulator
     ])

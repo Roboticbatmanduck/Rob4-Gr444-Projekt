@@ -39,8 +39,15 @@ setup(
             'pytest',
         ],
     },
-    entry_points={
-        'console_scripts': [
+entry_points={
+    'console_scripts': [
+        'person_center_pc = follow_me.yolo_person_center_pc:main',
+        'person_distance = follow_me.person_distance:main',
+        'person_angle = follow_me.person_angle:main',
+        'debug_visualizer = follow_me.debug_visualizer:main',
+        'distance_regulator = follow_me.distance_regulator:main',
+        'angle_regulator = follow_me.angle_regulator:main',
+        'command_sender = follow_me.command_sender:main',
         ],
     },
 )

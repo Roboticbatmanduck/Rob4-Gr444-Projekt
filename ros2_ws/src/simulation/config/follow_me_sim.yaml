@@ -1,24 +1,22 @@
-person_center_pc:
+yolo_person_center:
   ros__parameters:
-    image_topic: "/camera/camera/image_raw"
+    image_topic: "/camera/camera/color/image_raw"
     bbox_topic: "/person_bbox"
-    model_path: "yolov8n.pt"
+    model_path: "/workspace/src/follow_me/engine/best.engine"
     confidence_threshold: 0.7
     lost_frame_limit: 2
 
 person_angle:
   ros__parameters:
     bbox_topic: "/person_bbox"
-    camera_info_topic: "/camera/camera/camera_info"
+    camera_info_topic: "/camera/camera/color/camera_info"
     angle_topic: "/angle/measured"
 
 person_distance:
   ros__parameters:
     bbox_topic: "/person_bbox"
-    depth_topic: "/camera/camera/depth/image_raw"
-    camera_info_topic: "/camera/camera/camera_info"
+    depth_topic: "/camera/camera/aligned_depth_to_color/image_raw"
     distance_topic: "/distance/measured"
-    point_topic: "/distance/point"
     depth_scale: 1.0
     histogram_bins: 64
     min_valid_depth_m: 0.10
@@ -33,6 +31,11 @@ angle_regulator:
   ros__parameters:
     measured_topic: "/angle/measured"
     output_topic: "/angular_velocity"
+    min: -2.84
+    max: 2.84
+    kp: 1
+    ki: 0
+    kd: 0
     reference: 15.0
     publish_rate: 20.0
 
@@ -40,7 +43,12 @@ distance_regulator:
   ros__parameters:
     measured_topic: "/distance/measured"
     output_topic: "/linear_velocity"
-    reference: 2.0
+    min: 0
+    max: 0.22
+    kp: 1
+    ki: 0
+    kd: 0
+    reference: 1.85
     publish_rate: 20.0
 
 command_sender:
@@ -55,19 +63,10 @@ command_sender:
 
 debug_visualizer:
   ros__parameters:
-    image_topic: "/camera/camera/image_raw"
+    image_topic: "/camera/camera/color/image_raw"
     bbox_topic: "/person_bbox"
     distance_topic: "/distance/measured"
     angle_topic: "/angle/measured"
     debug_image_topic: "/follow_me/debug_image"
-
-simple_follower:
-  ros__parameters:
-    distance_topic: "/distance/measured"
-    angle_topic: "/angle/measured"
-    cmd_vel_topic: "/cmd_vel"
-    target_distance: 1.5
-    max_linear: 0.2
-    max_angular: 0.2
-    linear_gain: 0.5
-    angular_gain: 1.0
+    bbox_shrink_x: 0.1
+    bbox_shrink_y: 0.1
