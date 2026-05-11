@@ -1,12 +1,13 @@
 import rclpy
 import numpy as np
+import math
 from rclpy.node import Node
 
 from follow_me_interfaces.msg import PersonBBox
 from sensor_msgs.msg import CameraInfo
 from std_msgs.msg import Float32
 
-import math
+
 
 
 class PixelToAngle(Node):
@@ -16,11 +17,13 @@ class PixelToAngle(Node):
         self.declare_parameter("bbox_topic", "/person_bbox")
         self.declare_parameter("camera_info_topic", "/camera/camera/color/camera_info")
         self.declare_parameter("angle_topic", "/angle/measured")
+        self.declare_parameter("publish_rate", 20.0) 
 
         # Topics
         self.bbox_topic = self.get_parameter("bbox_topic").value
         self.camera_info_topic = self.get_parameter("camera_info_topic").value
         self.angle_topic = self.get_parameter("angle_topic").value
+        self.publish_rate = float(self.get_parameter("publish_rate").value)
 
         # Camera parameters
         self.fx = None
@@ -34,6 +37,9 @@ class PixelToAngle(Node):
         self.k3 = 0.0
         self.p1 = 0.0
         self.p2 = 0.0
+        
+        # Last angle
+        self.last_angle = None
 
         # Subscribers
         self.pixel_sub = self.create_subscription(
@@ -56,6 +62,12 @@ class PixelToAngle(Node):
             self.angle_topic,
             10,
         )
+
+        # Timer for regular publishing even if no new messages are received, to avoid stale data in the system.
+        period = 1.0 / self.publish_rate
+        self.timer = self.create_timer(period, self.timer_callback)
+
+        # Log the startup
 
         self.get_logger().info("PixelToAngle node started")
 
@@ -81,7 +93,9 @@ class PixelToAngle(Node):
         self.p2 = d[3] if len(d) > 3 else 0.0
         self.k3 = d[4] if len(d) > 4 else 0.0
 
-        self.get_logger().info(f"Camera intrinsics loaded: fx={self.fx}, fy={self.fy}, cx={self.cx}, cy={self.cy}, k1={self.k1}, k2={self.k2}, p1={self.p1}, p2={self.p2} and k3={self.k3}")
+        self.get_logger().info(
+            f"Camera intrinsics loaded: fx={self.fx}, fy={self.fy}, cx={self.cx}, cy={self.cy}, k1={self.k1}, k2={self.k2}, p1={self.p1}, p2={self.p2} and k3={self.k3}"
+        )
 
 
 
@@ -96,6 +110,7 @@ class PixelToAngle(Node):
             self.get_logger().debug("Invalid BBox received, skipping")
             return
 
+        # Center of bbox in pixel coordinates
         u = (msg.x1 + msg.x2) / 2
         v = (msg.y1 + msg.y2) / 2
 
@@ -116,11 +131,19 @@ class PixelToAngle(Node):
         theta_deg = math.degrees(theta)
         theta_deg = np.round(theta_deg,3)
 
+        # 5. Save the last angle
+        self.last_angle = theta
+
         self.get_logger().debug(f"Calculated angle is {theta_deg} in degrees and {theta} in radians")
 
-        # 5. Publish
+    # 5 Publish
+    def timer_callback(self):
+
+        if self.last_angle is None:
+            return
+
         out = Float32()
-        out.data = float(theta)
+        out.data = float(self.last_angle)
         self.angle_pub.publish(out)
 
 
