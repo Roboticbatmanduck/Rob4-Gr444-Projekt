@@ -76,7 +76,7 @@ class DistanceRegulator (Node):
         """Computes the control error and publishes the control signal."""
         #Calculate the control error
         err = Float32()
-        self.error = self.reference - self.measured
+        self.error = self.measured - self.reference
         err.data = self.error
         self.error_publisher.publish(err)
         #Compute control signal using the regulator
@@ -99,6 +99,8 @@ class DistanceRegulator (Node):
         self.error_old = self.error_prev
         self.error_prev = self.error
         self.u_prev = self.u
+        if self.u < 0.02:
+            self.u = 0
         return self.u 
     
 def main(args=None):
