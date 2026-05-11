@@ -11,7 +11,7 @@ class DistanceRegulator (Node):
     def __init__(self):
         super().__init__('distance_regulator')
 
-        self.declare_parameter("reference", 2.0)
+        self.declare_parameter("reference", 1.85)
         self.declare_parameter("measured_topic", "/distance/measured")
         self.declare_parameter("output_topic", "/linear_velocity")
         self.declare_parameter("publish_rate", 20.0)
@@ -107,7 +107,7 @@ class DistanceRegulator (Node):
         self.error_old = self.error_prev
         self.error_prev = self.error
         self.u_prev = self.u
-        if self.u < 0.02:
+        if self.u < 0.01:
             self.u = 0.0
         return self.u 
     
