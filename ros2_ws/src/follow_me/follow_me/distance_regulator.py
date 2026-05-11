@@ -11,10 +11,11 @@ class DistanceRegulator (Node):
     def __init__(self):
         super().__init__('distance_regulator')
 
-        self.declare_parameter("reference", 2.0)
+        self.declare_parameter("reference", 1.85)
         self.declare_parameter("measured_topic", "/distance/measured")
         self.declare_parameter("output_topic", "/linear_velocity")
         self.declare_parameter("publish_rate", 20.0)
+        self.declare_parameter("publish_error", "/distance/error")
         self.declare_parameter("min",0.0)
         self.declare_parameter("max",0.22)
         self.declare_parameter("kp",1.0)
@@ -25,7 +26,9 @@ class DistanceRegulator (Node):
         self.reference = float(self.get_parameter("reference").value)
         self.measured_topic = self.get_parameter("measured_topic").value
         self.output_topic = self.get_parameter("output_topic").value
+        self.error_topic = self.get_parameter("publish_error").value
         self.publish_rate = float(self.get_parameter("publish_rate").value)
+    
         self.min = float(self.get_parameter("min").value)
         self.max = float(self.get_parameter("max").value)
         self.kp = float(self.get_parameter("kp").value)
@@ -52,6 +55,11 @@ class DistanceRegulator (Node):
             self.output_topic,
             10
         )
+        self.error_publisher = self.create_publisher(
+            Float32,
+            self.error_topic,
+            10
+        )
 
         #Timer that runs the control loop at 20 Hz
         self.period = 1.0 / self.publish_rate
@@ -67,8 +75,10 @@ class DistanceRegulator (Node):
     def compute_and_publish(self):
         """Computes the control error and publishes the control signal."""
         #Calculate the control error
-        self.error = self.reference - self.measured
-
+        err = Float32()
+        self.error = self.measured - self.reference
+        err.data = self.error
+        self.error_publisher.publish(err)
         #Compute control signal using the regulator
         control_signal = self.compute_control()
 
@@ -80,6 +90,14 @@ class DistanceRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
+
+        if self.error < 0:
+            self.u = 0.0
+            self.u_prev = 0.0
+            self.error_prev = 0.0
+            self.error_old = 0.0
+            return self.u
+
         T = self.period
         P = self.kp*(self.error-self.error_prev)
         I = self.ki*self.error*T
@@ -89,6 +107,8 @@ class DistanceRegulator (Node):
         self.error_old = self.error_prev
         self.error_prev = self.error
         self.u_prev = self.u
+        if self.u < 0.01:
+            self.u = 0.0
         return self.u 
     
 def main(args=None):

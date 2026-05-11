@@ -16,6 +16,7 @@ class AngleRegulator (Node):
         self.declare_parameter("reference", -0.2618) # The reference is 15 degrees
         self.declare_parameter("measured_topic", "/angle/measured")
         self.declare_parameter("output_topic", "/angular_velocity")
+        self.declare_parameter("error_topic", "angular/error")
         self.declare_parameter("publish_rate", 20.0)
         self.declare_parameter("kp",1.0)
         self.declare_parameter("ki",0.0)
@@ -28,6 +29,7 @@ class AngleRegulator (Node):
         self.measured_topic = self.get_parameter("measured_topic").value
         self.output_topic = self.get_parameter("output_topic").value
         self.publish_rate = float(self.get_parameter("publish_rate").value)
+        self.error_topic = self.get_parameter("error_topic").value
         self.min = float(self.get_parameter("min").value)
         self.max = float(self.get_parameter("max").value)
         self.kp = float(self.get_parameter("kp").value)
@@ -55,6 +57,11 @@ class AngleRegulator (Node):
             self.output_topic,
             10
         )
+        self.error_publisher = self.create_publisher(
+            Float32,
+            self.error_topic,
+            10
+        )
 
         #Timer that runs the control loop at 20 Hz
         self.period = 1.0 / self.publish_rate
@@ -72,8 +79,10 @@ class AngleRegulator (Node):
         """
 
         #Calculate the error
+        err = Float32()
         self.error = self.reference - self.measured
-
+        err.data = self.error
+        self.error_publisher.publish(err)
         #Compute control signal using the regulator
         control_signal = self.compute_control()
 
