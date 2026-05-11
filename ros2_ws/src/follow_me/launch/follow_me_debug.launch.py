@@ -156,7 +156,7 @@ def generate_launch_description():
         yolo_person_center,
         person_angle,
         person_distance,
-        angle_regulator,
+        #angle_regulator,
         distance_regulator,
         command_sender,
         debug_visualizer
