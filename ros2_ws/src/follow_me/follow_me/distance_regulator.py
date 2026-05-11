@@ -10,7 +10,7 @@ class DistanceRegulator (Node):
     def __init__(self):
         super().__init__('distance_regulator')
 
-        self.declare_parameter("reference", 2.0)
+        self.declare_parameter("reference", 1.85)
         self.declare_parameter("measured_topic", "/distance/measured")
         self.declare_parameter("output_topic", "/linear_velocity")
         self.declare_parameter("publish_rate", 20.0)
