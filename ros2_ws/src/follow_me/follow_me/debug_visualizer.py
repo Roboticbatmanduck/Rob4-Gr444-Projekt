@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from std_msgs.msg import Float32
 from follow_me_interfaces.msg import PersonBBox
 from geometry_msgs.msg import PointStamped
@@ -78,7 +78,7 @@ class DebugVisualizer(Node):
         )
 
         self.debug_image_pub = self.create_publisher(
-            Image,
+            CompressedImage,
             self.debug_image_topic,
             10,
         )
