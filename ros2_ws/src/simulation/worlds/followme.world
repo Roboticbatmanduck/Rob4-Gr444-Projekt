@@ -34,29 +34,29 @@
         <!-- SIMPLE CIRCLE -->
         <trajectory id="0" type="walk">
 
-        <!-- Right straight section, going upward -->
-        <waypoint><time>0</time><pose>2.0 -1.5 0 0 0 1.57</pose></waypoint>
-        <waypoint><time>15</time><pose>2.0 0.0 0 0 0 1.57</pose></waypoint>
-        <waypoint><time>30</time><pose>2.0 1.5 0 0 0 1.57</pose></waypoint>
-
-        <!-- Rounded top end -->
-        <waypoint><time>35</time><pose>1.4 2.1 0 0 0 2.35</pose></waypoint>
-        <waypoint><time>40</time><pose>0.0 2.3 0 0 0 3.14</pose></waypoint>
-        <waypoint><time>45</time><pose>-1.4 2.1 0 0 0 -2.35</pose></waypoint>
-
-        <!-- Left straight section, going downward -->
-        <waypoint><time>50</time><pose>-2.0 1.5 0 0 0 -1.57</pose></waypoint>
-        <waypoint><time>65</time><pose>-2.0 0.0 0 0 0 -1.57</pose></waypoint>
-        <waypoint><time>80</time><pose>-2.0 -1.5 0 0 0 -1.57</pose></waypoint>
-
-        <!-- Rounded bottom end -->
-        <waypoint><time>85</time><pose>-1.4 -2.1 0 0 0 -0.78</pose></waypoint>
-        <waypoint><time>90</time><pose>0.0 -2.3 0 0 0 0.0</pose></waypoint>
-        <waypoint><time>95</time><pose>1.4 -2.1 0 0 0 0.78</pose></waypoint>
-
-        <!-- Back to start -->
-        <waypoint><time>100</time><pose>2.0 -1.5 0 0 0 1.57</pose></waypoint>
-
+          <!-- Right straight -->
+          <waypoint><time>0</time><pose>4.0 -3.0 0 0 0 1.57</pose></waypoint>
+          <waypoint><time>40</time><pose>4.0 0.0 0 0 0 1.57</pose></waypoint>
+          <waypoint><time>70</time><pose>4.0 3.0 0 0 0 1.57</pose></waypoint>
+        
+          <!-- Top rounded end -->
+          <waypoint><time>80</time><pose>2.8 4.2 0 0 0 2.35</pose></waypoint>
+          <waypoint><time>90</time><pose>0.0 4.6 0 0 0 3.14</pose></waypoint>
+          <waypoint><time>100</time><pose>-2.8 4.2 0 0 0 -2.35</pose></waypoint>
+        
+          <!-- Left straight -->
+          <waypoint><time>110</time><pose>-4.0 3.0 0 0 0 -1.57</pose></waypoint>
+          <waypoint><time>140</time><pose>-4.0 0.0 0 0 0 -1.57</pose></waypoint>
+          <waypoint><time>170</time><pose>-4.0 -3.0 0 0 0 -1.57</pose></waypoint>
+        
+          <!-- Bottom rounded end -->
+          <waypoint><time>180</time><pose>-2.8 -4.2 0 0 0 -0.78</pose></waypoint>
+          <waypoint><time>190</time><pose>0.0 -4.6 0 0 0 0.0</pose></waypoint>
+          <waypoint><time>200</time><pose>2.8 -4.2 0 0 0 0.78</pose></waypoint>
+        
+          <!-- Back to start -->
+          <waypoint><time>210</time><pose>4.0 -3.0 0 0 0 1.57</pose></waypoint>
+        
         </trajectory>
 
       </script>
