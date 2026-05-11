@@ -1,4 +1,5 @@
 import rclpy
+import numpy as np
 from rclpy.node import Node
 
 from follow_me_interfaces.msg import PersonBBox
@@ -112,6 +113,7 @@ class PixelToAngle(Node):
 
         # 4. Convert to degrees
         theta_deg = math.degrees(theta)
+        theta_deg = np.round(theta_deg,3)
 
         self.get_logger().debug(f"Calculated angle={theta_deg}")
 

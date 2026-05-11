@@ -173,7 +173,7 @@ class DistanceNode(Node):
             return
         
         distance, mean_z, mean_u, mean_v = result
-
+        distance = np.round(distance,3)
         #Publish point and distance
         distance_msg = Float32()
         distance_msg.data = float(distance)
