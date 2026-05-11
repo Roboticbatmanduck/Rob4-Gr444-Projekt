@@ -16,9 +16,9 @@ class AngleRegulator (Node):
         self.declare_parameter("measured_topic", "/angle/measured")
         self.declare_parameter("output_topic", "/angular_velocity")
         self.declare_parameter("publish_rate", 20.0)
-        self.declare_parameter("kp",1)
-        self.declare_parameter("ki",0)
-        self.declare_parameter("kd",0)
+        self.declare_parameter("kp",1.0)
+        self.declare_parameter("ki",0.0)
+        self.declare_parameter("kd",0.0)
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)

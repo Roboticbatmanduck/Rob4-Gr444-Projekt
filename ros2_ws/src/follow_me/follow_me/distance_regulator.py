@@ -11,15 +11,15 @@ class DistanceRegulator (Node):
     def __init__(self):
         super().__init__('distance_regulator')
 
-        self.declare_parameter("reference", 1.85)
+        self.declare_parameter("reference", 2.0)
         self.declare_parameter("measured_topic", "/distance/measured")
         self.declare_parameter("output_topic", "/linear_velocity")
         self.declare_parameter("publish_rate", 20.0)
-        self.declare_parameter("min",0)
+        self.declare_parameter("min",0.0)
         self.declare_parameter("max",0.22)
-        self.declare_parameter("kp",1)
-        self.declare_parameter("ki",0)
-        self.declare_parameter("kd",0)
+        self.declare_parameter("kp",1.0)
+        self.declare_parameter("ki",0.0)
+        self.declare_parameter("kd",0.0)
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
@@ -38,7 +38,6 @@ class DistanceRegulator (Node):
         self.error_old = 0
         self.u = 0
         self.u_prev = 0
-
         #Subscriber for the measured distance
         self.create_subscription(
             Float32,
@@ -67,7 +66,6 @@ class DistanceRegulator (Node):
     
     def compute_and_publish(self):
         """Computes the control error and publishes the control signal."""
-        
         #Calculate the control error
         self.error = self.reference - self.measured
 
