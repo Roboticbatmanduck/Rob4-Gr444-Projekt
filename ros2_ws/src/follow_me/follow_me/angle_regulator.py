@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32
+import numpy as np
 
 class AngleRegulator (Node):
     """
@@ -16,6 +17,8 @@ class AngleRegulator (Node):
         self.declare_parameter("measured_topic", "/angle/measured")
         self.declare_parameter("output_topic", "/angular_velocity")
         self.declare_parameter("publish_rate", 20.0)
+        self.declare_parameter("min",-2.84)
+        self.declare_parameter("max",2.84)
         self.declare_parameter("kp",1)
         self.declare_parameter("ki",0)
         self.declare_parameter("kd",0)
@@ -25,6 +28,8 @@ class AngleRegulator (Node):
         self.measured_topic = self.get_parameter("measured_topic").value
         self.output_topic = self.get_parameter("output_topic").value
         self.publish_rate = float(self.get_parameter("publish_rate").value)
+        self.min = float(self.get_parameter("min").value)
+        self.max = float(self.get_parameter("max").value)
         self.kp = float(self.get_parameter("kp").value)
         self.ki = float(self.get_parameter("ki").value)
         self.kd = float(self.get_parameter("kd").value)
@@ -86,6 +91,7 @@ class AngleRegulator (Node):
         I = self.ki*self.error*T
         D = self.kd*(self.error-2*self.error_prev+self.error_old)/T
         self.u = self.u_prev + P+I+D
+        self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
         self.error_old = self.error_prev
         self.error_prev = self.error
         self.u_prev = self.u
