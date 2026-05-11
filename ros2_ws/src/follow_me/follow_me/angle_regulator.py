@@ -16,6 +16,7 @@ class AngleRegulator (Node):
         self.declare_parameter("reference", 15.0)
         self.declare_parameter("measured_topic", "/angle/measured")
         self.declare_parameter("output_topic", "/angular_velocity")
+        self.declare_parameter("error_topic", "angular/error")
         self.declare_parameter("publish_rate", 20.0)
         self.declare_parameter("kp",1.0)
         self.declare_parameter("ki",0.0)
@@ -28,6 +29,7 @@ class AngleRegulator (Node):
         self.measured_topic = self.get_parameter("measured_topic").value
         self.output_topic = self.get_parameter("output_topic").value
         self.publish_rate = float(self.get_parameter("publish_rate").value)
+        self.error_topic = self.get_parameter("error_topic").value
         self.min = float(self.get_parameter("min").value)
         self.max = float(self.get_parameter("max").value)
         self.kp = float(self.get_parameter("kp").value)
@@ -53,6 +55,11 @@ class AngleRegulator (Node):
         self.control_publisher = self.create_publisher(
             Float32,
             self.output_topic,
+            10
+        )
+        self.error_publisher = self.create_publisher(
+            Float32,
+            self.error_topic,
             10
         )
 
