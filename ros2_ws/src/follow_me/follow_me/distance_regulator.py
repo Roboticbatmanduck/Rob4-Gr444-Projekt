@@ -16,6 +16,9 @@ class DistanceRegulator (Node):
         self.declare_parameter("output_topic", "/linear_velocity")
         self.declare_parameter("publish_rate", 20.0)
         self.declare_parameter("publish_error", "/distance/error")
+        self.declare_parameter("P_signal", "distance/P_signal")
+        self.declare_parameter("I_signal", "distance/I_signal")
+        self.declare_parameter("D_signal", "distance/D_signal")
         self.declare_parameter("min",0.0)
         self.declare_parameter("max",0.22)
         self.declare_parameter("kp",1.0)
@@ -29,6 +32,9 @@ class DistanceRegulator (Node):
         self.output_topic = self.get_parameter("output_topic").value
         self.error_topic = self.get_parameter("publish_error").value
         self.publish_rate = float(self.get_parameter("publish_rate").value)
+        self.P_topic = self.get_parameter("P_signal").value
+        self.I_topic = self.get_parameter("I_signal").value
+        self.D_topic = self.get_parameter("D_signal").value
     
         self.min = float(self.get_parameter("min").value)
         self.max = float(self.get_parameter("max").value)
@@ -37,7 +43,7 @@ class DistanceRegulator (Node):
         self.kd = float(self.get_parameter("kd").value)
         self.deadband = float(self.get_parameter("deadband").value)
 
-        self.measured = self.reference #Initialize the measured distance to the reference to avoid large initial error
+        self.measured = None #Initialize the measured distance to the reference to avoid large initial error
         self.error = 0.0
         self.error_prev = 0.0
         self.error_old = 0.0
@@ -63,6 +69,21 @@ class DistanceRegulator (Node):
             self.error_topic,
             10
         )
+        self.P_topic = self.create_publisher(
+            Float32,
+            self.P_topic,
+            10
+        )
+        self.I_topic = self.create_publisher(
+            Float32,
+            self.I_topic,
+            10
+        )
+        self.D_topic = self.create_publisher(
+            Float32,
+            self.D_topic,
+            10
+        )
 
         #Timer that runs the control loop at 20 Hz
         self.period = 1.0 / self.publish_rate
@@ -79,7 +100,10 @@ class DistanceRegulator (Node):
         """Computes the control error and publishes the control signal."""
         #Calculate the control error
         err = Float32()
-        self.error = self.measured - self.reference
+        if self.measured == None:
+            self.error = 0.0    
+        else:
+            self.error = self.measured - self.reference
         err.data = self.error
         self.error_publisher.publish(err)
         #Compute control signal using the regulator
@@ -93,9 +117,12 @@ class DistanceRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
+        if abs(self.error) < self.deadband:
+            self.I = 0.0
+            return 0.0
         T = self.period
         P = self.kp * self.error
-        I = self.ki * self.error*T + self.I
+        I = self.ki * self.error * T + self.I
         D = self.kd*(self.error - self.error_prev)/T
         self.u = P + I + D
         self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
@@ -103,8 +130,16 @@ class DistanceRegulator (Node):
         self.error_prev = self.error
         self.I = I
         self.u_prev = self.u
-        if abs(self.u) < self.deadband:
-            return 0.0
+        P_msg = Float32()
+        I_msg = Float32()
+        D_msg = Float32()
+        P_msg.data = P
+        I_msg.data = I
+        D_msg.data = D
+        self.P_topic.publish(P_msg)
+        self.I_topic.publish(I_msg)
+        self.D_topic.publish(D_msg)
+        
         return self.u 
     
 def main(args=None):
