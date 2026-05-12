@@ -64,8 +64,8 @@ def generate_launch_description():
         actions=[
             Node(
                 package='follow_me',
-                executable='person_center_pc',
-                name='person_center_pc',
+                executable='yolo_person_center',
+                name='person_center',
                 parameters=[config_file],
                 output='screen',
             )

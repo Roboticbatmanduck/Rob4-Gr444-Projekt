@@ -7,6 +7,14 @@ from std_msgs.msg import Float32
 import numpy as np
 import math
 
+'''
+
+Simple follower node for ROS 2.
+Subscribes to distance and angle topics, and publishes velocity commands to follow a target.
+Made by ChatGPT, adapted from a ROS 1 version by OpenAI's robotics team.
+Only for demonstration purposes.
+Is to be deleted when a more robust solution is implemented.
+'''
 
 class SimpleFollower(Node):
     def __init__(self):
