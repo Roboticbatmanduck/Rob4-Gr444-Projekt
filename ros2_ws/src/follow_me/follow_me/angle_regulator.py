@@ -23,10 +23,16 @@ class AngleRegulator (Node):
         self.declare_parameter("kd",0.0)
         self.declare_parameter("min",-2.84)
         self.declare_parameter("max",2.84)
+        self.declare_parameter("P_signal", "angular/P_signal")
+        self.declare_parameter("I_signal", "angular/I_signal")
+        self.declare_parameter("D_signal", "angular/D_signal")
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
         self.measured_topic = self.get_parameter("measured_topic").value
+        self.P_topic = self.get_parameter("P_signal").value
+        self.I_topic = self.get_parameter("I_signal").value
+        self.D_topic = self.get_parameter("D_signal").value
         self.output_topic = self.get_parameter("output_topic").value
         self.publish_rate = float(self.get_parameter("publish_rate").value)
         self.error_topic = self.get_parameter("error_topic").value
@@ -58,6 +64,21 @@ class AngleRegulator (Node):
             self.output_topic,
             10
         )
+        self.P_topic = self.create_publisher(
+            Float32,
+            self.P_topic,
+            10
+        )
+        self.I_topic = self.create_publisher(
+            Float32,
+            self.I_topic,
+            10
+        )
+        self.D_topic = self.create_publisher(
+            Float32,
+            self.D_topic,
+            10
+        )
         self.error_publisher = self.create_publisher(
             Float32,
             self.error_topic,
@@ -81,7 +102,7 @@ class AngleRegulator (Node):
 
         #Calculate the error
         err = Float32()
-        self.error = self.reference - self.measured
+        self.error = self.measured - self.reference
         err.data = self.error
         self.error_publisher.publish(err)
         #Compute control signal using the regulator
@@ -108,7 +129,17 @@ class AngleRegulator (Node):
         self.error_prev = self.error
         self.I = I
         self.u_prev = self.u
-        return -self.u 
+        P_msg = Float32()
+        I_msg = Float32()
+        D_msg = Float32()
+        P_msg.data = P
+        I_msg.data = I
+        D_msg.data = D
+        self.P_topic.publish(P_msg)
+        self.I_topic.publish(I_msg)
+        self.D_topic.publish(D_msg)
+
+        return self.u 
     
 def main(args=None):
     """Main function that initializes ROS2 and starts the node"""
