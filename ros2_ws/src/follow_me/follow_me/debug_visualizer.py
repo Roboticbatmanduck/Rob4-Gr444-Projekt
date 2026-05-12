@@ -7,6 +7,7 @@ from follow_me_interfaces.msg import PersonBBox
 from geometry_msgs.msg import PointStamped
 
 from cv_bridge import CvBridge
+import numpy as np
 import cv2
 
 
@@ -21,6 +22,7 @@ class DebugVisualizer(Node):
         self.declare_parameter("debug_image_topic", "/follow_me/debug/compressed")
         self.declare_parameter("distance_point_topic", "/distance/point")
         self.declare_parameter("detect_topic", "/detect")
+        self.declare_parameter("angle_deg_measured", "/angle/measured/deg")
         
         self.declare_parameter("bbox_shrink_x", 0.1)
         self.declare_parameter("bbox_shrink_y", 0.1)
@@ -34,6 +36,7 @@ class DebugVisualizer(Node):
         self.bbox_shrink_x = float(self.get_parameter("bbox_shrink_x").value)
         self.bbox_shrink_y = float(self.get_parameter("bbox_shrink_y").value)
         self.detect_topic = self.get_parameter("detect_topic").value
+        self.angle_deg = self.get_parameter("angle_deg_measured").value
 
         self.bridge = CvBridge()
 
@@ -91,6 +94,11 @@ class DebugVisualizer(Node):
             self.detect_topic,
             10
         )
+        self.degree_publisher = self.create_publisher(
+            Float32,
+            self.angle_deg,
+            10
+        )
 
         self.get_logger().info("Debug visualizer started")
 
@@ -126,6 +134,12 @@ class DebugVisualizer(Node):
         detect_msg = Bool()
         detect_msg.data = self.detect
         self.detect_publisher.publish(detect_msg)
+        deg_msg = Float32()
+        if self.latest_angle is not None:
+            deg_msg.data = float(np.rad2deg(self.latest_angle))
+        else:
+            deg_msg.data = 0.0  # eller skip entirely
+        self.degree_publisher.publish(deg_msg)
 
     def distance_point_callback(self, msg):
         self.latest_distance_point = msg
@@ -221,7 +235,7 @@ class DebugVisualizer(Node):
         if self.latest_angle is None:
             angle_text = "angle: --- deg"
         else:
-            angle_text = f"angle: {self.latest_angle:.2f} deg"
+            angle_text = f"angle: {np.rad2deg(self.latest_angle):.2f} deg"
 
         if self.latest_distance is None:
             camera_distance = "Hypotenuse: ---"
