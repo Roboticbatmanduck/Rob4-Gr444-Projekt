@@ -7,6 +7,7 @@ from follow_me_interfaces.msg import PersonBBox
 from geometry_msgs.msg import PointStamped
 
 from cv_bridge import CvBridge
+import numpy as np
 import cv2
 
 
@@ -221,7 +222,7 @@ class DebugVisualizer(Node):
         if self.latest_angle is None:
             angle_text = "angle: --- deg"
         else:
-            angle_text = f"angle: {self.latest_angle:.2f} deg"
+            angle_text = f"angle: {np.rad2deg(self.latest_angle):.2f} deg"
 
         if self.latest_distance is None:
             camera_distance = "Hypotenuse: ---"
