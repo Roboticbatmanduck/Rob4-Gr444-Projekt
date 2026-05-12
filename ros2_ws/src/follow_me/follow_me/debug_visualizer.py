@@ -95,7 +95,7 @@ class DebugVisualizer(Node):
             10
         )
         self.degree_publisher = self.create_publisher(
-            Bool,
+            Float32,
             self.angle_deg,
             10
         )
