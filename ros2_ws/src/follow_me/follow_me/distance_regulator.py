@@ -93,8 +93,6 @@ class DistanceRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
-        if self.error < 0.1:
-            return 0.0
         T = self.period
         P = self.kp * self.error
         I = self.ki * self.error*T + self.I
@@ -105,6 +103,8 @@ class DistanceRegulator (Node):
         self.error_prev = self.error
         self.I = I
         self.u_prev = self.u
+        if abs(self.u) < self.deadband:
+            return 0.0
         return self.u 
     
 def main(args=None):

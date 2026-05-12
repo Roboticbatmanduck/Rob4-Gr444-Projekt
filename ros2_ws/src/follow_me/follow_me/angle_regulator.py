@@ -26,6 +26,7 @@ class AngleRegulator (Node):
         self.declare_parameter("P_signal", "angular/P_signal")
         self.declare_parameter("I_signal", "angular/I_signal")
         self.declare_parameter("D_signal", "angular/D_signal")
+        self.declare_parameter("deadband", 0.01)
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
@@ -41,6 +42,7 @@ class AngleRegulator (Node):
         self.kp = float(self.get_parameter("kp").value)
         self.ki = float(self.get_parameter("ki").value)
         self.kd = float(self.get_parameter("kd").value)
+        self.deadband = float(self.get_parameter("deadband").value)
 
         self.measured = self.reference # Initialize measured angle to reference to avoid large initial error
         self.error = 0.0
@@ -116,18 +118,14 @@ class AngleRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
-        if abs(self.error) < 0.1:
-            self.I = 0.0
-            return 0.0
         T = self.period
-        P = self.kp * self.error
-        I = self.ki * self.error*T + self.I
-        D = self.kd*(self.error - self.error_prev)/T
-        self.u = P + I + D
+        P = self.kp*(self.error-self.error_prev)
+        I = self.ki*self.error*T
+        D = self.kd*(self.error-2*self.error_prev+self.error_old)/T
+        self.u = self.u_prev + P+I+D
         self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
         self.error_old = self.error_prev
         self.error_prev = self.error
-        self.I = I
         self.u_prev = self.u
         P_msg = Float32()
         I_msg = Float32()
@@ -138,7 +136,8 @@ class AngleRegulator (Node):
         self.P_topic.publish(P_msg)
         self.I_topic.publish(I_msg)
         self.D_topic.publish(D_msg)
-
+        if abs(self.u) < self.deadband:
+            return 0.0
         return self.u 
     
 def main(args=None):
