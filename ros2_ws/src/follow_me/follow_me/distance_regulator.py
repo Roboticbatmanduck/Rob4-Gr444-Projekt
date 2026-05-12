@@ -79,7 +79,7 @@ class DistanceRegulator (Node):
         """Computes the control error and publishes the control signal."""
         #Calculate the control error
         err = Float32()
-        self.error = self.reference - self.measured 
+        self.error = self.measured - self.reference
         err.data = self.error
         self.error_publisher.publish(err)
         #Compute control signal using the regulator
