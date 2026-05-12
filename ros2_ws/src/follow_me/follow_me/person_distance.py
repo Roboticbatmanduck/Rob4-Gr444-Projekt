@@ -42,6 +42,7 @@ class DistanceNode(Node):
        self.declare_parameter("sync_slop", 0.05)
        self.declare_parameter("foreground_margin_m", 0.20)
        self.declare_parameter("camera_pitch_deg", 20.0)
+       self.declare_parameter("publish_rate", 20.0)
 
        self.bbox_topic = self.get_parameter("bbox_topic").value
        self.depth_topic = self.get_parameter("depth_topic").value
@@ -58,8 +59,15 @@ class DistanceNode(Node):
        self.sync_slop = float(self.get_parameter("sync_slop").value)
        self.foreground_margin_m = float(self.get_parameter("foreground_margin_m").value)
        self.camera_pitch_deg = float(self.get_parameter("camera_pitch_deg").value)
-       
+       self.publish_rate = float(self.get_parameter("publish_rate").value)
+
        self.bridge = CvBridge()
+
+       period = 1.0 / self.publish_rate
+       self.timer = self.create_timer(period, self.timer_callback)
+       
+       self.latest_result = None
+       self.latest_header = None
 
        #camera intrinsics
        self.fx = None
@@ -114,6 +122,8 @@ class DistanceNode(Node):
            "/distance/point",
            10,
        )
+
+       
 
        self.sync.registerCallback(self.synced_callback)
        
@@ -171,8 +181,14 @@ class DistanceNode(Node):
 
         if result is None:
             return
+        self.latest_result = result
+        self.latest_header = depth_msg.header
         
-        distance, mean_z, mean_u, mean_v = result
+        
+    def timer_callback(self):
+        if self.latest_result is None or self.latest_header is None:
+            return
+        distance, mean_z, mean_u, mean_v = self.latest_result
         distance = np.round(distance,3)
         #Publish point and distance
         distance_msg = Float32()
@@ -180,9 +196,9 @@ class DistanceNode(Node):
         self.distance_publisher.publish(distance_msg)
 
         point_msg = PointStamped()
-        point_msg.header.stamp = depth_msg.header.stamp
-        point_msg.header.frame_id = depth_msg.header.frame_id
- 
+        point_msg.header.stamp = self.latest_header.stamp
+        point_msg.header.frame_id = self.latest_header.frame_id
+
         point_msg.point.x = float(mean_u)
         point_msg.point.y = float(mean_v)
         point_msg.point.z = float(mean_z)
@@ -190,9 +206,10 @@ class DistanceNode(Node):
         self.point_publisher.publish(point_msg)
 
         self.get_logger().debug(
-            f"Published distance: {distance_msg.data:.3f} m, "
-            f"frame_point: ({mean_u:.3f}, {mean_v:.3f}, {mean_z:.3f})"
-            ) 
+        f"Published distance: {distance_msg.data:.3f} m, "
+        f"frame_point: ({mean_u:.3f}, {mean_v:.3f}, {mean_z:.3f})"
+        ) 
+
 
 
    def crop_depth_to_bbox(self, depth_image, bbox_msg):
