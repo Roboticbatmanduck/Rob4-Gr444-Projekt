@@ -185,7 +185,7 @@ class DistanceNode(Node):
         self.latest_header = depth_msg.header
         
         
-    def timer_callback(self):
+   def timer_callback(self):
         if self.latest_result is None or self.latest_header is None:
             return
         distance, mean_z, mean_u, mean_v = self.latest_result
