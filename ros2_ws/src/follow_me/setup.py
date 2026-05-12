@@ -34,6 +34,7 @@ setup(
             "angle_regulator = follow_me.angle_regulator:main",
             "command_sender = follow_me.command_sender:main",
             "debug_visualizer = follow_me.debug_visualizer:main",
+            "mp4_converter = follow_me.image_to_mp4:main" 
         ],
     },
 )
