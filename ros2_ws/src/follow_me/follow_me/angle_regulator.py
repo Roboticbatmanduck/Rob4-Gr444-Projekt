@@ -42,6 +42,7 @@ class AngleRegulator (Node):
         self.error_old = 0.0
         self.u = 0.0
         self.u_prev = 0.0
+        self.I = 0.0
 
         #Subscriber for the measured angle
         self.create_subscription(
@@ -94,15 +95,17 @@ class AngleRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
-
+        if self.error < 0.1:
+            return 0.0
         T = self.period
-        P = self.kp*(self.error-self.error_prev)
-        I = self.ki*self.error*T
-        D = self.kd*(self.error-2*self.error_prev+self.error_old)/T
-        self.u = self.u_prev + P+I+D
+        P = self.kp * self.error
+        I = self.ki * self.error*T + self.I
+        D = self.kd*(self.error - self.error_prev)/T
+        self.u = P + I + D
         self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
         self.error_old = self.error_prev
         self.error_prev = self.error
+        self.I = I
         self.u_prev = self.u
         return self.u 
     
