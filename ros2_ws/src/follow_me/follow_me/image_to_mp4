@@ -14,7 +14,7 @@ class CompressedVideoRecorder(Node):
 
         self.declare_parameter("image_topic", "/follow_me/debug/compressed")
         self.declare_parameter("output_path", "output.mp4")
-        self.declare_parameter("fps", 20.0)
+        self.declare_parameter("fps", 30.0)
 
         self.topic = self.get_parameter("image_topic").value
         self.output_path = self.get_parameter("output_path").value
