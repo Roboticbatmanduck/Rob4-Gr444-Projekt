@@ -105,7 +105,7 @@ class DistanceRegulator (Node):
         self.error_prev = self.error
         self.I = I
         self.u_prev = self.u
-        return -self.u 
+        return self.u 
     
 def main(args=None):
     """Main function that initializes ROS2 and starts the node"""
