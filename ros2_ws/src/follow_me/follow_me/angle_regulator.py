@@ -118,6 +118,8 @@ class AngleRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
+        if abs(self.u) < self.deadband:
+            return 0.0
         T = self.period
         P = self.kp*(self.error-self.error_prev)
         I = self.ki*self.error*T
@@ -136,8 +138,7 @@ class AngleRegulator (Node):
         self.P_topic.publish(P_msg)
         self.I_topic.publish(I_msg)
         self.D_topic.publish(D_msg)
-        if abs(self.u) < self.deadband:
-            return 0.0
+
         return self.u 
     
 def main(args=None):

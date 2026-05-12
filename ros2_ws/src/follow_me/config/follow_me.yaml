@@ -38,7 +38,7 @@ angle_regulator:
     kd: 0.4
     reference: -0.2618
     publish_rate: 20.0
-    deadband: 0.01
+    deadband: 0.2
 
 distance_regulator:
   ros__parameters:
