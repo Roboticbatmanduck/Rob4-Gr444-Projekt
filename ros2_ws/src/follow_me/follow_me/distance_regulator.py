@@ -46,9 +46,7 @@ class DistanceRegulator (Node):
         self.measured = None #Initialize the measured distance to the reference to avoid large initial error
         self.error = 0.0
         self.error_prev = 0.0
-        self.error_old = 0.0
         self.u = 0.0
-        self.u_prev = 0.0
         self.I = 0.0
         #Subscriber for the measured distance
         self.create_subscription(
@@ -126,10 +124,8 @@ class DistanceRegulator (Node):
         D = self.kd*(self.error - self.error_prev)/T
         self.u = P + I + D
         self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
-        self.error_old = self.error_prev
         self.error_prev = self.error
         self.I = I
-        self.u_prev = self.u
         P_msg = Float32()
         I_msg = Float32()
         D_msg = Float32()
