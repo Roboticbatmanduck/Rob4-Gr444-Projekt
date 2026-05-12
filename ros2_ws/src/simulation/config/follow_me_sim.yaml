@@ -1,8 +1,8 @@
-person_center_pc:
+person_center:
   ros__parameters:
     image_topic: "/camera/camera/image_raw"
     bbox_topic: "/person_bbox"
-    model_path: "yolov8n.pt"
+    model_path: "/workspace/src/simulation/YOLO/best.pt"
     confidence_threshold: 0.7
     lost_frame_limit: 2
 
@@ -50,8 +50,8 @@ command_sender:
     cmd_vel_topic: "/cmd_vel"
     publish_rate: 20.0
     timeout: 0.5
-    max_linear: 0.22
-    max_angular: 2.84
+    max_linear: 0.18
+    max_angular: 1.00
 
 debug_visualizer:
   ros__parameters:
