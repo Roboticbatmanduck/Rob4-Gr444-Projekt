@@ -95,7 +95,7 @@ class AngleRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
-        if self.error < 0.1:
+        if abs(self.error) < 0.1:
             return 0.0
         T = self.period
         P = self.kp * self.error
