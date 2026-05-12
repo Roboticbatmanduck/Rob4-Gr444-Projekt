@@ -122,6 +122,7 @@ class DistanceRegulator (Node):
         T = self.period
         P = self.kp * self.error
         I = self.ki * self.error * T + self.I
+        I = np.clip(I, -self.max,self.max)
         D = self.kd*(self.error - self.error_prev)/T
         self.u = P + I + D
         self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
