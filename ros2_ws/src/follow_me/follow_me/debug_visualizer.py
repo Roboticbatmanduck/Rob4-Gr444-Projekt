@@ -135,7 +135,10 @@ class DebugVisualizer(Node):
         detect_msg.data = self.detect
         self.detect_publisher.publish(detect_msg)
         deg_msg = Float32()
-        deg_msg.data = np.rad2deg(self.latest_angle)
+        if self.latest_angle is not None:
+            deg_msg.data = float(np.rad2deg(self.latest_angle))
+        else:
+            deg_msg.data = 0.0  # eller skip entirely
         self.degree_publisher.publish(deg_msg)
 
     def distance_point_callback(self, msg):
