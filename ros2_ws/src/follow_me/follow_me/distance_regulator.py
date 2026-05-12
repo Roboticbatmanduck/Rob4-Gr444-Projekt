@@ -97,11 +97,11 @@ class DistanceRegulator (Node):
         I = self.ki*self.error*T
         D = self.kd*(self.error-2*self.error_prev+self.error_old)/T
         self.u = self.u_prev + P+I+D
-        self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
+        self.u = np.clip(self.u, -self.min, self.max) #Clip the control signal to be between self.min and self.max
         self.error_old = self.error_prev
         self.error_prev = self.error
         self.u_prev = self.u
-        if self.u < self.deadband:
+        if self.u <= self.deadband:
             self.u = 0.0
         return self.u 
     

@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image, CompressedImage
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Bool
 from follow_me_interfaces.msg import PersonBBox
 from geometry_msgs.msg import PointStamped
 
@@ -20,6 +20,7 @@ class DebugVisualizer(Node):
         self.declare_parameter("angle_topic", "/angle/measured")
         self.declare_parameter("debug_image_topic", "/follow_me/debug/compressed")
         self.declare_parameter("distance_point_topic", "/distance/point")
+        self.declare_parameter("detect_topic", "/detect")
         
         self.declare_parameter("bbox_shrink_x", 0.1)
         self.declare_parameter("bbox_shrink_y", 0.1)
@@ -32,6 +33,7 @@ class DebugVisualizer(Node):
         self.distance_point_topic = self.get_parameter("distance_point_topic").value
         self.bbox_shrink_x = float(self.get_parameter("bbox_shrink_x").value)
         self.bbox_shrink_y = float(self.get_parameter("bbox_shrink_y").value)
+        self.detect_topic = self.get_parameter("detect_topic").value
 
         self.bridge = CvBridge()
 
@@ -41,6 +43,8 @@ class DebugVisualizer(Node):
 
         self.latest_distance_angle = None
         self.latest_distance_point = None
+
+        self.detect = False
 
         self.create_subscription(
             Image,
@@ -82,11 +86,17 @@ class DebugVisualizer(Node):
             self.debug_image_topic,
             10,
         )
+        self.detect_publisher = self.create_publisher(
+            Bool,
+            self.detect_topic,
+            10
+        )
 
         self.get_logger().info("Debug visualizer started")
 
     def bbox_callback(self, msg):
         self.latest_bbox = msg
+        self.detect = self.latest_bbox.valid
 
     def distance_callback(self, msg):
         self.latest_distance = float(msg.data)
@@ -113,6 +123,9 @@ class DebugVisualizer(Node):
         comp_msg.data = encoded.tobytes()
 
         self.debug_image_pub.publish(comp_msg)
+        detect_msg = Bool()
+        detect_msg.data = self.detect
+        self.detect_publisher.publish(detect_msg)
 
     def distance_point_callback(self, msg):
         self.latest_distance_point = msg

@@ -33,14 +33,14 @@ angle_regulator:
   ros__parameters:
     measured_topic: "/angle/measured"
     output_topic: "/angular_velocity"
-    reference: 15.0
+    reference: -0.2618
     publish_rate: 20.0
 
 distance_regulator:
   ros__parameters:
     measured_topic: "/distance/measured"
     output_topic: "/linear_velocity"
-    reference: 2.0
+    reference: 1.85
     publish_rate: 20.0
 
 command_sender:

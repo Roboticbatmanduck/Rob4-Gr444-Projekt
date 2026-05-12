@@ -35,7 +35,7 @@ def generate_launch_description():
                 'worlds',
                 'followme.world'
             ),
-            'gui': 'false',
+            'gui': 'true',
             'extra_gazebo_args': '--verbose  -s libgazebo_ros_factory.so',
         }.items()
     )

@@ -26,7 +26,6 @@ class YoloPersonCenter(Node):
         self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
         self.declare_parameter("bbox_topic", "/person_bbox")
         self.declare_parameter("model_path", "/workspace/src/follow_me/engine/best.engine")
-        self.declare_parameter("detect_topic", "/detect")
         self.declare_parameter("confidence_threshold", 0.7)
         self.declare_parameter("lost_frame_limit", 2)
 
@@ -36,7 +35,7 @@ class YoloPersonCenter(Node):
         self.model_path = self.get_parameter("model_path").value
         self.confidence_threshold = float(self.get_parameter("confidence_threshold").value)
         self.lost_frame_limit = int(self.get_parameter("lost_frame_limit").value)
-        self.detect_topic = self.get_parameter("detect_topic").value
+        
 
         #Define cv2 bridge and YOLO model
         self.bridge = CvBridge()
@@ -66,11 +65,7 @@ class YoloPersonCenter(Node):
             self.bbox_topic, 
             10,
         )
-        self.detect_publisher = self.create_publisher(
-            Bool,
-            self.detect_topic,
-            10
-        )
+
 
     def image_callback(self, msg):     
         #The image_callback function is called whenever a new image is received on the raw_image topic.
@@ -96,10 +91,8 @@ class YoloPersonCenter(Node):
         if best_target is None:
             self.handle_lost_target(msg.header)
             return
-        detected = Bool()
-        detected.data = True
         self.publish_valid_target(best_target, msg.header)
-        self.detect_publisher.publish(detected)
+        
 
     def find_best_target(self, results):
         #This function takes the results from the YOLO model and finds the best target to track based on the confidence scores and proximity to the last detected center point.
@@ -165,10 +158,7 @@ class YoloPersonCenter(Node):
         # forget the old target and publish an invalid bbox.
         if self.lost_frames >= self.lost_frame_limit:
             self.last_center = None
-            not_detected = Bool()
-            not_detected.data = False
             self.publish_invalid_target(header)
-            self.detect_publisher.publish(not_detected)
 
     def publish_invalid_target(self, header):
         bbox = PersonBBox()
