@@ -23,10 +23,20 @@ class AngleRegulator (Node):
         self.declare_parameter("kd",0.0)
         self.declare_parameter("min",-2.84)
         self.declare_parameter("max",2.84)
+        self.declare_parameter("P_signal", "angular/P_signal")
+        self.declare_parameter("I_signal", "angular/I_signal")
+        self.declare_parameter("D_signal", "angular/D_signal")
+        self.declare_parameter("deadband", 0.01)
+        self.declare_parameter("timeout", 0.5)
+        
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
         self.measured_topic = self.get_parameter("measured_topic").value
+        self.timeout = float(self.get_parameter("timeout").value)
+        self.P_topic = self.get_parameter("P_signal").value
+        self.I_topic = self.get_parameter("I_signal").value
+        self.D_topic = self.get_parameter("D_signal").value
         self.output_topic = self.get_parameter("output_topic").value
         self.publish_rate = float(self.get_parameter("publish_rate").value)
         self.error_topic = self.get_parameter("error_topic").value
@@ -35,6 +45,9 @@ class AngleRegulator (Node):
         self.kp = float(self.get_parameter("kp").value)
         self.ki = float(self.get_parameter("ki").value)
         self.kd = float(self.get_parameter("kd").value)
+        self.deadband = float(self.get_parameter("deadband").value)
+
+        self.last_msg = self.get_clock().now()
 
         self.measured = self.reference # Initialize measured angle to reference to avoid large initial error
         self.error = 0.0
@@ -42,6 +55,7 @@ class AngleRegulator (Node):
         self.error_old = 0.0
         self.u = 0.0
         self.u_prev = 0.0
+        self.I = 0.0
 
         #Subscriber for the measured angle
         self.create_subscription(
@@ -55,6 +69,21 @@ class AngleRegulator (Node):
         self.control_publisher = self.create_publisher(
             Float32,
             self.output_topic,
+            10
+        )
+        self.P_topic = self.create_publisher(
+            Float32,
+            self.P_topic,
+            10
+        )
+        self.I_topic = self.create_publisher(
+            Float32,
+            self.I_topic,
+            10
+        )
+        self.D_topic = self.create_publisher(
+            Float32,
+            self.D_topic,
             10
         )
         self.error_publisher = self.create_publisher(
@@ -73,6 +102,7 @@ class AngleRegulator (Node):
     def measured_callback(self, msg):
         #Callback function for the measured angle. Stores the latest value
         self.measured = float(msg.data)
+        self.last_msg = self.get_clock().now()
     
     def compute_and_publish(self):
         """Computes the control error and publishes the control signal.
@@ -94,7 +124,12 @@ class AngleRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
-
+        dt = self.get_clock().now() - self.last_msg
+        seconds_since_last_msg = dt.nanoseconds * 1e-9
+        # if seconds_since_last_msg > self.timeout:
+        #      return 0.0
+        # if abs(self.error) < self.deadband:
+        #     return self.u_prev
         T = self.period
         P = self.kp*(self.error-self.error_prev)
         I = self.ki*self.error*T
@@ -104,6 +139,16 @@ class AngleRegulator (Node):
         self.error_old = self.error_prev
         self.error_prev = self.error
         self.u_prev = self.u
+        P_msg = Float32()
+        I_msg = Float32()
+        D_msg = Float32()
+        P_msg.data = P
+        I_msg.data = I
+        D_msg.data = D
+        self.P_topic.publish(P_msg)
+        self.I_topic.publish(I_msg)
+        self.D_topic.publish(D_msg)
+
         return self.u 
     
 def main(args=None):

@@ -29,6 +29,18 @@ def generate_launch_description():
         ])
     )
 
+    foxglove_bridge = Node(
+    package="foxglove_bridge",
+    executable="foxglove_bridge",
+    name="foxglove_bridge",
+    output="screen",
+    parameters=[{
+        "port": 8765,
+        "address": "0.0.0.0"
+    }],
+)
+
+
     realsense_camera = TimerAction(
         period=3.0,
         actions=[
@@ -67,6 +79,7 @@ def generate_launch_description():
             )
         ],
     )
+
 
     person_angle = TimerAction(
         period=8.0,
@@ -159,5 +172,6 @@ def generate_launch_description():
         angle_regulator,
         distance_regulator,
         command_sender,
-        debug_visualizer
+        debug_visualizer,
+        foxglove_bridge
     ])

@@ -246,14 +246,7 @@ class DistanceNode(Node):
    def estimate_distance_and_point(self, depth_crop, x_offset, y_offset):
        #Estimates the distance to the person
 
-       #1. Convert depth crop to meters
-       #2. Remove invalid depth values
-       #3. Use historgram to find the dominant depth peak
-       #4. Select pixels close to that peak as foreground
-       #5. Back-project those pixels to 3D camera coords
-       #6. Average the 3D points to get a stable distance estimate and point
-       #7. Project the averaged point onto the horizontal ground plane using the known camera pitch angle
-
+    
        depth_m = depth_crop.astype(np.float32) / self.depth_scale
        
        valid_mask = (
@@ -302,30 +295,24 @@ class DistanceNode(Node):
        u = u_crop + x_offset
        v = v_crop + y_offset
 
-       #back-project to 3D camera coords
-       x = (u - self.cx) * z / self.fx
-       y = (v - self.cy) * z / self.fy
-
-       mean_x = float(np.mean(x)) 
-       mean_y = float(np.mean(y)) 
+       # calculate the mean distance and mean pixel coordinates in the original image frame
        mean_z = float(np.mean(z))
 
        mean_u = float(np.mean(u))
-       mean_v = float(np.mean(v))  
+       mean_v = float(np.mean(v))
+
+       # Normalize y 
+       normalized_y = (mean_v - self.cy) / self.fy
 
        #correct for camera pitch to get horizontal distance on the ground plane
        pitch_rad = math.radians(self.camera_pitch_deg)
+       theta_y = math.atan(normalized_y)
 
-       forward_horisontal = (
-           mean_z * math.cos(pitch_rad) 
-           + mean_y * math.sin(pitch_rad)
-       ) 
+       # The angle between the camera-to-person line and the ground plane
+       angle = pitch_rad - theta_y
 
-       side_horizontal = mean_x
-
-       horizontal_distance = math.sqrt(
-           forward_horisontal**2 + side_horizontal**2
-       )
+       # The horizontal distance from the camera to the point on the ground plane directly below the person
+       horizontal_distance = mean_z * math.cos(angle)
        
 
        return horizontal_distance, mean_z, mean_u, mean_v

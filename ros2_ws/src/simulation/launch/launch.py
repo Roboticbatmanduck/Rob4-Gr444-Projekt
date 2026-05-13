@@ -36,36 +36,32 @@ def generate_launch_description():
                 'followme.world'
             ),
             'gui': 'true',
-            'extra_gazebo_args': '--verbose  -s libgazebo_ros_factory.so',
+            'extra_gazebo_args': '--verbose -s libgazebo_ros_init.so -s libgazebo_ros_factory.so',
         }.items()
     )
 
-    spawn_robot_delayed = TimerAction(
-        period=5.0,
-        actions=[
-            Node(
-                package='gazebo_ros',
-                executable='spawn_entity.py',
-                arguments=[
-                    '-entity', 'turtlebot3_burger_depth',
-                    '-file', os.path.join(
-                        simulation_dir,
-                        'models',
-                        'model.sdf'
-                    )
-                ],
-                output='screen'
-            )
-        ]
-    )
+    spawn_robot = Node(
+    package='gazebo_ros',
+    executable='spawn_entity.py',
+    arguments=[
+        '-entity', 'turtlebot3_burger_depth',
+        '-file', os.path.join(
+            simulation_dir,
+            'models',
+            'model.sdf'
+        )
+    ],
+    output='screen',
+    prefix="bash -c 'until ros2 service list | grep /spawn_entity; do echo waiting for spawn service...; sleep 1; done; exec'"
+)
 
     yolo_node = TimerAction(
         period=6.0,
         actions=[
             Node(
                 package='follow_me',
-                executable='person_center_pc',
-                name='person_center_pc',
+                executable='yolo_person_center',
+                name='person_center',
                 parameters=[config_file],
                 output='screen',
             )
@@ -182,7 +178,7 @@ def generate_launch_description():
         ),
 
         start_followme_world,
-        spawn_robot_delayed,
+        spawn_robot,
         start_rqt_image_view,
         yolo_node,
         person_distance_node,

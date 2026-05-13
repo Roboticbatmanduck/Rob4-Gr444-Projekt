@@ -118,8 +118,6 @@ class DebugVisualizer(Node):
         self.draw_bbox(frame)
         self.draw_text_info(frame)
 
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        debug_msg = self.bridge.cv2_to_imgmsg(rgb_frame, encoding="rgb8")
         comp_msg = CompressedImage()
         comp_msg.header = msg.header
         comp_msg.format = "jpeg"
@@ -237,11 +235,6 @@ class DebugVisualizer(Node):
         else:
             angle_text = f"angle: {np.rad2deg(self.latest_angle):.2f} deg"
 
-        if self.latest_distance is None:
-            camera_distance = "Hypotenuse: ---"
-        else:
-            camera_distance = f"Hypotenuse: {self.latest_distance_point.point.z:.2f} m"
-
         cv2.putText(
             frame,
             distance_text,
@@ -261,19 +254,6 @@ class DebugVisualizer(Node):
             (255, 255, 255),
             2,
         )
-
-        cv2.putText(
-            frame,
-            camera_distance,
-            (20, y + 2 * line_spacing),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            (255, 255, 255),
-            2,
-        )
-
-
-
 
 def main(args=None):
     rclpy.init(args=args)
