@@ -49,6 +49,7 @@ class DistanceRegulator (Node):
         self.error_prev = 0.0
         self.u = 0.0
         self.I = 0.0
+        self.last_msg = self.get_clock().now()
         #Subscriber for the measured distance
         self.create_subscription(
             Float32,

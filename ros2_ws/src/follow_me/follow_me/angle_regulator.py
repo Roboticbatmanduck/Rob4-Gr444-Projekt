@@ -47,7 +47,7 @@ class AngleRegulator (Node):
         self.kd = float(self.get_parameter("kd").value)
         self.deadband = float(self.get_parameter("deadband").value)
 
-        self.last_msg = 0.0
+        self.last_msg = self.get_clock().now()
 
         self.measured = self.reference # Initialize measured angle to reference to avoid large initial error
         self.error = 0.0
@@ -128,7 +128,7 @@ class AngleRegulator (Node):
         seconds_since_last_msg = dt.nanoseconds * 1e-9
         if seconds_since_last_msg > self.timeout:
             return 0.0
-        if abs(self.u) < self.deadband:
+        if abs(self.error) < self.deadband:
             return 0.0
         T = self.period
         P = self.kp*(self.error-self.error_prev)
