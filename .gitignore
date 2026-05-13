@@ -211,3 +211,25 @@ AMENT_IGNORE
 ros2_ws/build/
 ros2_ws/install/
 ros2_ws/log/
+
+# ROS bagfiles
+rosbag2_*/
+
+# video / output
+*.mp4
+
+
+
+# temp/editor files
+*.swp
+
+# run folders
+run*/
+test_run/
+
+# build / install (hvis ikke allerede)
+build/
+install/
+log/
+
+
