@@ -29,6 +29,7 @@ class CommandSender(Node):
         self.linear = 0.0
         self.angular = 0.0
         self.last_msg = self.get_clock().now()
+        
 
         self.create_subscription(# Create subscriber to linear velocity topic, with default qos
             Float32,               

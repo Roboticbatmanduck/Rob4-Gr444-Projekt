@@ -27,10 +27,13 @@ class AngleRegulator (Node):
         self.declare_parameter("I_signal", "angular/I_signal")
         self.declare_parameter("D_signal", "angular/D_signal")
         self.declare_parameter("deadband", 0.01)
+        self.declare_parameter("timeout", 0.5)
+        
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
         self.measured_topic = self.get_parameter("measured_topic").value
+        self.timeout = float(self.get_parameter("timeout").value)
         self.P_topic = self.get_parameter("P_signal").value
         self.I_topic = self.get_parameter("I_signal").value
         self.D_topic = self.get_parameter("D_signal").value
@@ -43,6 +46,8 @@ class AngleRegulator (Node):
         self.ki = float(self.get_parameter("ki").value)
         self.kd = float(self.get_parameter("kd").value)
         self.deadband = float(self.get_parameter("deadband").value)
+
+        self.last_msg = 0.0
 
         self.measured = self.reference # Initialize measured angle to reference to avoid large initial error
         self.error = 0.0
@@ -97,6 +102,7 @@ class AngleRegulator (Node):
     def measured_callback(self, msg):
         #Callback function for the measured angle. Stores the latest value
         self.measured = float(msg.data)
+        self.last_msg = self.get_clock().now()
     
     def compute_and_publish(self):
         """Computes the control error and publishes the control signal.
@@ -118,6 +124,10 @@ class AngleRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
+        dt = self.get_clock().now() - self.last_msg
+        seconds_since_last_msg = dt.nanoseconds * 1e-9
+        if seconds_since_last_msg > self.timeout:
+            return 0.0
         if abs(self.u) < self.deadband:
             return 0.0
         T = self.period

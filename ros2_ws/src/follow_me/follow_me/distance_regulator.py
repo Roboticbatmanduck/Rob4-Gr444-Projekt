@@ -25,6 +25,7 @@ class DistanceRegulator (Node):
         self.declare_parameter("ki",0.0)
         self.declare_parameter("kd",0.0)
         self.declare_parameter("deadband", 0.01)
+        self.declare_parameter("timeout", 0.5)
 
         # Get parameters
         self.reference = float(self.get_parameter("reference").value)
@@ -35,7 +36,7 @@ class DistanceRegulator (Node):
         self.P_topic = self.get_parameter("P_signal").value
         self.I_topic = self.get_parameter("I_signal").value
         self.D_topic = self.get_parameter("D_signal").value
-    
+        self.timeout = float(self.get_parameter("timeout").value)    
         self.min = float(self.get_parameter("min").value)
         self.max = float(self.get_parameter("max").value)
         self.kp = float(self.get_parameter("kp").value)
@@ -115,6 +116,10 @@ class DistanceRegulator (Node):
 
     def compute_control(self):
         #Regulatoren altså PID/Lead lag led indsættes her
+        dt = self.get_clock().now() - self.last_msg
+        seconds_since_last_msg = dt.nanoseconds * 1e-9
+        if seconds_since_last_msg > self.timeout:
+            return 0.0
         if abs(self.error) < self.deadband:
             return 0.0
         T = self.period
