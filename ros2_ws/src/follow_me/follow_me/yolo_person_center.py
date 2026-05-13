@@ -11,7 +11,7 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from ultralytics import YOLO
 
 
-class YoloPersonCenter(Node):
+class YoloPersonCenter(Node): ##yes good comment
     def __init__(self):
         super().__init__("yolo_person_center")
 
