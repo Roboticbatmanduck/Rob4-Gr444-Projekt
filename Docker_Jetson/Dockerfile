@@ -98,7 +98,9 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
     ros-humble-realsense2-camera \
     ros-humble-realsense2-description \
- && rm -rf /var/lib/apt/lists/*
+	ros-humble-foxglove-bridge \
+ && rm -rf /var/lib/apt/lists/* 
+
 
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
 RUN echo "export LDS_MODEL=LDS-01" >> /root/.bashrc
