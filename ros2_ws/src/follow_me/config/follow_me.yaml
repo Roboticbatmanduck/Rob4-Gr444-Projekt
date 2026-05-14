@@ -38,7 +38,7 @@ angle_regulator:
     kd: 0.4
     reference: -0.2618
     publish_rate: 20.0
-    deadband: 0.02
+    deadband: 0.008727
     timeout: 0.1
 
 distance_regulator:
@@ -52,7 +52,7 @@ distance_regulator:
     kd: 0.6
     reference: 1.85
     publish_rate: 20.0
-    deadband: 0.01
+    deadband: 0.05
     timeout: 0.1
 
 command_sender:
