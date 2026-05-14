@@ -49,7 +49,7 @@ class DistanceRegulator (Node):
         self.u = 0.0
         self.I = 0.0
         self.last_msg = self.get_clock().now()
-        
+
         #Subscriber for the measured distance
         self.create_subscription(
             Float32,
@@ -127,7 +127,8 @@ class DistanceRegulator (Node):
         # Compute PID terms
         T = self.period
         P = self.kp * self.error
-        I = np.clip(self.ki * self.error * T + self.I, -self.max, self.max)
+        I = self.ki * self.error * T + self.I
+        I = np.clip(I, -self.max, self.max)
         D = self.kd * (self.error - self.error_prev) / T
         
         # Combine and clip output
