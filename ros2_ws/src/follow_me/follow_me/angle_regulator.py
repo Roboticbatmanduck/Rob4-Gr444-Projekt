@@ -13,7 +13,7 @@ class AngleRegulator (Node):
     def __init__(self):
         super().__init__('angle_regulator')
 
-        self.declare_parameter("reference", -0.2618) # The reference is 15 degrees
+        self.declare_parameter("reference", -0.2618) # The reference is -15 degrees
         self.declare_parameter("measured_topic", "/angle/measured")
         self.declare_parameter("output_topic", "/angular_velocity")
         self.declare_parameter("error_topic", "angular/error")
@@ -111,6 +111,7 @@ class AngleRegulator (Node):
         #Calculate the error
         err = Float32()
         self.error = self.reference - self.measured
+        # self.error = (self.error + np.pi) % (2*np.pi) - np.pi
         err.data = self.error
         self.error_publisher.publish(err)
         #Compute control signal using the regulator
@@ -128,8 +129,8 @@ class AngleRegulator (Node):
         seconds_since_last_msg = dt.nanoseconds * 1e-9
         if seconds_since_last_msg > self.timeout or abs(self.error) <= 0.008727:
             return 0.0
-        if abs(self.error) < self.deadband:
-            return self.u_prev
+        # if abs(self.error) < self.deadband:
+        #     return self.u_prev
         T = self.period
         P = self.kp*(self.error-self.error_prev)
         I = self.ki*self.error*T

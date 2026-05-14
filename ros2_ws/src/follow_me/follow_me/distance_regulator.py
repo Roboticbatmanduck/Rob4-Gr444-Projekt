@@ -122,14 +122,17 @@ class DistanceRegulator (Node):
         seconds_since_last_msg = dt.nanoseconds * 1e-9
         if seconds_since_last_msg > self.timeout:
             return 0.0
-        if abs(self.error) < self.deadband or abs(self.error) <= 0.05:
+        if abs(self.error) < self.deadband:
             return 0.0
+        if abs(self.error) <= 0.05:
+            scale = abs(self.error) / 0.05
+        else: 
+            scale = 1.0
         T = self.period
         P = self.kp * self.error
-        I = self.ki * self.error * T + self.I
-        I = np.clip(I, -self.max,self.max)
+        I = np.clip(self.ki * self.error * T + self.I, -self.max,self.max)
         D = self.kd*(self.error - self.error_prev)/T
-        self.u = P + I + D
+        self.u = scale * (P + I + D)
         self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
         self.error_prev = self.error
         self.I = I
@@ -142,7 +145,6 @@ class DistanceRegulator (Node):
         self.P_topic.publish(P_msg)
         self.I_topic.publish(I_msg)
         self.D_topic.publish(D_msg)
-        
         return self.u 
     
 def main(args=None):
