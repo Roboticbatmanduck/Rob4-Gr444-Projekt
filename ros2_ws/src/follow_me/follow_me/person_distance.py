@@ -155,6 +155,8 @@ class DistanceNode(Node):
    def synced_callback(self, depth_msg, bbox_msg):
         #called when we have a new pair of depth and bbox messages that are close enough in time. 
         if not bbox_msg.valid:
+            self.latest_result = None
+            self.latest_header = None
             return
 
         if self.fx is None:
@@ -186,10 +188,11 @@ class DistanceNode(Node):
         
         
    def timer_callback(self):
-        if self.latest_result is None or self.latest_header is None or self.bbox_topic.valid == False:
+        if self.latest_result is None or self.latest_header is None:
             return
         distance, mean_z, mean_u, mean_v = self.latest_result
         distance = np.round(distance,3)
+        
         #Publish point and distance
         distance_msg = Float32()
         distance_msg.data = float(distance)

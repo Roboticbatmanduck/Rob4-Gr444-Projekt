@@ -37,6 +37,8 @@ class PixelToAngle(Node):
         self.k3 = 0.0
         self.p1 = 0.0
         self.p2 = 0.0
+
+        self.target_valid = False
         
         # Last angle
         self.last_angle = None
@@ -108,7 +110,11 @@ class PixelToAngle(Node):
         
         if not msg.valid:
             self.get_logger().debug("Invalid BBox received, skipping")
+            self.target_valid = False
+            self.last_angle = None
             return
+
+        self.target_valid = True
 
         # Center of bbox in pixel coordinates
         u = (msg.x1 + msg.x2) / 2
@@ -139,7 +145,7 @@ class PixelToAngle(Node):
     # 5 Publish
     def timer_callback(self):
 
-        if self.last_angle is None or self.bbox_topic.valid == False:
+        if self.last_angle is None or not self.target_valid:
             return
 
         out = Float32()
