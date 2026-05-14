@@ -4,9 +4,6 @@ from std_msgs.msg import Float32
 import numpy as np
 
 class DistanceRegulator (Node):
-    """ROS2 node that regulates the robot's linear motion. 
-    The node recieves a distance reference and a measured distance,
-    computes the error, and output a linear velocity command."""
 
     def __init__(self):
         super().__init__('distance_regulator')
@@ -98,7 +95,6 @@ class DistanceRegulator (Node):
         self.last_msg = self.get_clock().now()
     
     def compute_and_publish(self):
-        """Computes the control error and publishes the control signal."""
         #Calculate the control error
         err = Float32()
         if self.measured == None:
@@ -144,7 +140,6 @@ class DistanceRegulator (Node):
         return self.u 
     
 def main(args=None):
-    """Main function that initializes ROS2 and starts the node"""
     rclpy.init(args=args)
     node = DistanceRegulator()
     rclpy.spin(node)
