@@ -126,7 +126,7 @@ class AngleRegulator (Node):
         #Regulatoren altså PID/Lead lag led indsættes her
         dt = self.get_clock().now() - self.last_msg
         seconds_since_last_msg = dt.nanoseconds * 1e-9
-        if seconds_since_last_msg > self.timeout:
+        if seconds_since_last_msg > self.timeout or abs(self.error) <= 0.008727:
             return 0.0
         if abs(self.error) < self.deadband:
             return self.u_prev
