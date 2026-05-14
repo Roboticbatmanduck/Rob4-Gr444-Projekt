@@ -7,10 +7,6 @@ services:
     container_name: ros2_humble_dev
 
     runtime: nvidia
-    mem_limit: 6g
-    memswap_limit: -1
-    shm_size: "1gb"
-    oom_kill_disable: true
     volumes:
       - /home/rg4444/rg4444-docker/Rob4-Gr444-Projekt/ros2_ws:/workspace
       - /dev:/dev
