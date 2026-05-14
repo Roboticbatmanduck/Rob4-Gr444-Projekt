@@ -139,7 +139,7 @@ class PixelToAngle(Node):
     # 5 Publish
     def timer_callback(self):
 
-        if self.last_angle is None:
+        if self.last_angle is None or self.bbox_topic.valid == False:
             return
 
         out = Float32()

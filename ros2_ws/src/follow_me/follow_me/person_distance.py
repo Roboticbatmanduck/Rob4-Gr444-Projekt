@@ -186,7 +186,7 @@ class DistanceNode(Node):
         
         
    def timer_callback(self):
-        if self.latest_result is None or self.latest_header is None:
+        if self.latest_result is None or self.latest_header is None or self.bbox_topic.valid == False:
             return
         distance, mean_z, mean_u, mean_v = self.latest_result
         distance = np.round(distance,3)
