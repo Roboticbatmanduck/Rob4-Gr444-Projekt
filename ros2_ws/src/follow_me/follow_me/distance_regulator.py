@@ -122,7 +122,7 @@ class DistanceRegulator (Node):
         seconds_since_last_msg = dt.nanoseconds * 1e-9
         if seconds_since_last_msg > self.timeout:
             return 0.0
-        if abs(self.error) < self.deadband:
+        if abs(self.error) < self.deadband or abs(self.error) <= 0.05:
             return 0.0
         T = self.period
         P = self.kp * self.error
