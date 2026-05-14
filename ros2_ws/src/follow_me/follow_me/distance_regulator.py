@@ -8,6 +8,7 @@ class DistanceRegulator (Node):
     def __init__(self):
         super().__init__('distance_regulator')
 
+        # Declare parameters
         self.declare_parameter("reference", 1.85)
         self.declare_parameter("measured_topic", "/distance/measured")
         self.declare_parameter("output_topic", "/linear_velocity")
@@ -41,12 +42,14 @@ class DistanceRegulator (Node):
         self.kd = float(self.get_parameter("kd").value)
         self.deadband = float(self.get_parameter("deadband").value)
 
-        self.measured = None #Initialize the measured distance to the reference to avoid large initial error
+        # Initialize control variables
+        self.measured = None
         self.error = 0.0
         self.error_prev = 0.0
         self.u = 0.0
         self.I = 0.0
         self.last_msg = self.get_clock().now()
+        
         #Subscriber for the measured distance
         self.create_subscription(
             Float32,
@@ -55,7 +58,7 @@ class DistanceRegulator (Node):
             10
         )
 
-        #Publisher for the linear velocity command
+        # Create publishers 
         self.control_publisher = self.create_publisher(
             Float32,
             self.output_topic,
@@ -82,7 +85,7 @@ class DistanceRegulator (Node):
             10
         )
 
-        #Timer that runs the control loop at 20 Hz
+        # Create control loop timer
         self.period = 1.0 / self.publish_rate
         self.timer = self.create_timer(self.period, self.compute_and_publish)
 
@@ -90,44 +93,52 @@ class DistanceRegulator (Node):
         self.get_logger().info('Distance regulator started')
 
     def measured_callback(self, msg):
-        #Callback function for the measured distance. Stores the latest value
+        # Store measured distance and timestamp
         self.measured = float(msg.data)
         self.last_msg = self.get_clock().now()
     
     def compute_and_publish(self):
-        #Calculate the control error
-        err = Float32()
-        if self.measured == None:
+        # Calculate error
+        if self.measured is None:
             self.error = 0.0    
         else:
             self.error = self.measured - self.reference
+        
         if abs(self.error) <= self.deadband:
             self.error = 0.0
+        
+        err = Float32()
         err.data = self.error
         self.error_publisher.publish(err)
-        #Compute control signal using the regulator
+        
+        # Compute and publish control signal
         control_signal = self.compute_control()
-
-        #Publiosh the control singal as linear velocity
         msg = Float32()
         msg.data = float(control_signal)
-        
         self.control_publisher.publish(msg)
 
     def compute_control(self):
-        #Regulatoren altså PID/Lead lag led indsættes her
+        # Check for timeout
         dt = self.get_clock().now() - self.last_msg
         seconds_since_last_msg = dt.nanoseconds * 1e-9
         if seconds_since_last_msg > self.timeout:
             return 0.0
+        
+        # Compute PID terms
         T = self.period
         P = self.kp * self.error
-        I = np.clip(self.ki * self.error * T + self.I, -self.max,self.max)
-        D = self.kd*(self.error - self.error_prev)/T
+        I = np.clip(self.ki * self.error * T + self.I, -self.max, self.max)
+        D = self.kd * (self.error - self.error_prev) / T
+        
+        # Combine and clip output
         self.u = P + I + D
-        self.u = np.clip(self.u, self.min, self.max) #Clip the control signal to be between self.min and self.max
+        self.u = np.clip(self.u, self.min, self.max)
+        
+        # Update state
         self.error_prev = self.error
         self.I = I
+        
+        # Publish PID components
         P_msg = Float32()
         I_msg = Float32()
         D_msg = Float32()
@@ -137,6 +148,7 @@ class DistanceRegulator (Node):
         self.P_topic.publish(P_msg)
         self.I_topic.publish(I_msg)
         self.D_topic.publish(D_msg)
+        
         return self.u 
     
 def main(args=None):
