@@ -108,7 +108,8 @@ class AngleRegulator (Node):
     def compute_and_publish(self):
         # Calculate angular error between reference and measured
         self.error = self.reference - self.measured
-        # self.error = (self.error + np.pi) % (2*np.pi) - np.pi #angle wrapping
+        # Wrap angle to between [-pi,pi] to ensure shortest path
+        self.error = (self.error + np.pi) % (2*np.pi) - np.pi
         err = Float32()
         err.data = self.error
         self.error_publisher.publish(err)
