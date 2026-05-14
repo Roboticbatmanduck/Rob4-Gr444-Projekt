@@ -230,5 +230,8 @@ build/
 install/
 log/
 
-# engine
-ros2_ws/src/follow_me/engine/
+# YOLO / TensorRT generated model files
+ros2_ws/src/follow_me/engine/*.engine
+ros2_ws/src/follow_me/engine/*.onnx
+ros2_ws/src/follow_me/engine/*.pt
+ros2_ws/src/follow_me/engine/pt_to_engine.py

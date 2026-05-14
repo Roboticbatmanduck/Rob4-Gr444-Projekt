@@ -39,7 +39,8 @@ class YoloPersonCenter(Node): ##yes good comment
 
         #Define cv2 bridge and YOLO model
         self.bridge = CvBridge()
-        self.model = YOLO(self.model_path, task="detect") #task="detect" is not strictly necessary as it is the default, unless another model is used.
+        self.model = YOLO(self.model_path) #task="detect" is not strictly necessary as it is the default, unless another model is used.
+        self.model.task = "detect"
 
         #Initialize values of the last detected person center and how many frames have lost detection in a row.
         self.last_center = None
