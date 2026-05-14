@@ -95,6 +95,7 @@ class DistanceRegulator (Node):
     def measured_callback(self, msg):
         #Callback function for the measured distance. Stores the latest value
         self.measured = float(msg.data)
+        self.last_msg = self.get_clock().now()
     
     def compute_and_publish(self):
         """Computes the control error and publishes the control signal."""
