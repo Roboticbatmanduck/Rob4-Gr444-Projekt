@@ -39,6 +39,7 @@ angle_regulator:
     reference: -0.2618
     publish_rate: 20.0
     deadband: 0.02
+    timeout: 0.1
 
 distance_regulator:
   ros__parameters:
@@ -52,6 +53,7 @@ distance_regulator:
     reference: 1.85
     publish_rate: 20.0
     deadband: 0.01
+    timeout: 0.1
 
 command_sender:
   ros__parameters:
