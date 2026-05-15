@@ -36,7 +36,7 @@ angle_regulator:
     kp: 2.4
     ki: 0.6
     kd: 0.4
-    reference: -0.2618
+    reference: 0.0
     publish_rate: 20.0
     deadband: 0.008727
     timeout: 0.1
