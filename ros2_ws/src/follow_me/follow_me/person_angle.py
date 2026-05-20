@@ -16,14 +16,12 @@ class PixelToAngle(Node):
 
         self.declare_parameter("bbox_topic", "/person_bbox")
         self.declare_parameter("camera_info_topic", "/camera/camera/color/camera_info")
-        self.declare_parameter("angle_topic", "/angle/measured")
-        self.declare_parameter("publish_rate", 20.0) 
+        self.declare_parameter("angle_topic", "/angle/measured") 
 
         # Topics
         self.bbox_topic = self.get_parameter("bbox_topic").value
         self.camera_info_topic = self.get_parameter("camera_info_topic").value
         self.angle_topic = self.get_parameter("angle_topic").value
-        self.publish_rate = float(self.get_parameter("publish_rate").value)
 
         # Camera parameters
         self.fx = None
@@ -64,10 +62,6 @@ class PixelToAngle(Node):
             self.angle_topic,
             10,
         )
-
-        # Timer for regular publishing even if no new messages are received, to avoid stale data in the system.
-        period = 1.0 / self.publish_rate
-        self.timer = self.create_timer(period, self.timer_callback)
 
         # Log the startup
 
@@ -137,21 +131,14 @@ class PixelToAngle(Node):
         theta_deg = math.degrees(theta)
         theta_deg = np.round(theta_deg,3)
 
-        # 5. Save the last angle
-        self.last_angle = theta
-
-        self.get_logger().debug(f"Calculated angle is {theta_deg} in degrees and {theta} in radians")
-
-    # 5 Publish
-    def timer_callback(self):
-
-        if self.last_angle is None or not self.target_valid:
-            return
-
+        # 5. Publish immediately
         out = Float32()
-        out.data = float(self.last_angle)
+        out.data = float(theta)
         self.angle_pub.publish(out)
 
+        self.get_logger().debug(
+            f"Published angle: {theta_deg} deg, {theta} rad"
+        )
 
     # Undistortion
     def undistort(self, x, y):
